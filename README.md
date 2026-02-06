@@ -8,6 +8,7 @@ A glucometer is a small, portable medical device used to measure the concentrati
 This trend is reflected locally in Philadelphia, where diabetes prevalence has increased by more than 50% over the past 15 years. Nearly one in three individuals living with diabetes in the city are unaware of their condition, highlighting a critical gap in early detection and routine monitoring. In 2017, diabetes was the sixth leading cause of death in Philadelphia, accounting for 374 deaths. These statistics highlight the need for low-cost, accessible glucometers that can expand glucose testing and support earlier intervention in at-risk populations.
 
 **Project Goals**
+
 Build a system that:
 - Runs a chronoamperometry measurement on a commercial glucose test strip
 - Extracts a robust electrochemical (current) feature (e.g., current at 10 s)
@@ -19,6 +20,7 @@ This project will be developed in two stages:
 2. A standalone embedded prototype integrating measurement and display
 
 **Physical and Chemical Principles of a Glucometer**
+
 Electrochemical glucometers operate by coupling a selective biochemical reaction with an electrochemical transduction mechanism to convert glucose concentration into a measurable electrical signal. Commercial glucose test strips rely on the enzyme glucose oxidase (GOx), which selectively reacts with glucose present in the sample. In the presence of molecular oxygen, glucose oxidase catalyzes the oxidation of D-glucose to D-gluconolactone, producing hydrogen peroxide (H₂O₂) as a reaction byproduct. Because this reaction is highly specific to glucose, it provides the chemical selectivity necessary for accurate glucose sensing.
 The generated hydrogen peroxide serves as the electroactive species in the sensing process. When a constant potential is applied across the electrode surface by a potentiostat, hydrogen peroxide is electrochemically oxidized at the working electrode. This oxidation reaction results in the transfer of electrons to the electrode, generating an electrical current. The magnitude of this current is directly related to the rate of hydrogen peroxide oxidation and, by extension, to the concentration of glucose originally present in the sample. In this way, chemical reaction kinetics at the electrode surface are converted into an electrical signal that can be measured with high sensitivity.
 
@@ -26,15 +28,16 @@ The electrochemical measurement is performed using chronoamperometry, in which t
 By measuring the steady or quasi-steady current at a fixed time for a series of known glucose standards, a calibration curve relating current to glucose concentration can be constructed. Once this calibration relationship is established, measured current values from unknown samples can be converted directly into glucose concentration using a linear fit. This combination of enzyme specificity, electrochemical oxidation, diffusion-controlled transport, and calibration-based signal interpretation forms the physical and chemical foundation of the glucometer system implemented in this project.
 
 **Preliminary Calculations**
+
 Blood Stimulant (NaCl Stock Solution)
 To mimic the electrolyte balance of human blood, we will create a 100mL stock solution with a concentration of 140 mmol NaCl/L, which is the standard NaCl concentration in human blood.
 
 (140 mmol/L)  (1 mol/1000 mmol)  (58.44 g/mol)   (1L/1000 mL)  (100 mL) = 0.818 g NaCl
 
 Glucose Standards
+
 We prepared four standards by adding specific masses of glucose to 25 mL of our stock solution. The molar mass of glucose is 180.156 g/mpl. The concentrations were calculated as follows:
 
-**Glucose Standards**
 Concentration (mM) = Mass (g) / 180.156 g/mol0.025 L   1000
 
 
@@ -44,6 +47,7 @@ Concentration (mM) = Mass (g) / 180.156 g/mol0.025 L   1000
 **Proposed Prototypes**
 
 _**Prototype 1: Computer Based Interface**_
+
 In this initial prototype, the laptop serves as the primary control and data-processing platform, while the Arduino is dedicated solely to user-interface output.
 A Python-based workflow provided by IO Rodeo is used to execute the chronoamperometry measurement. The script controls the potentiostat, applies the required potential step, and records the resulting current–time response from the commercial glucose test strip. From this dataset, a robust electrochemical feature (such as the current at a specified time point) is extracted and converted to glucose concentration using an experimentally derived calibration curve. The calculated glucose value is then transmitted to an Arduino Uno over a USB serial connection. The Arduino receives this value and displays the glucose concentration on a 128 × 64 I2C OLED screen.
 

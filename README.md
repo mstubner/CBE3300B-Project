@@ -111,6 +111,14 @@ However, the project also faces notable external threats. The glucometer market 
 
 [SweetSpot GANTT Chart - Gantt Chart Template.pdf](https://github.com/user-attachments/files/25115357/SweetSpot.GANTT.Chart.-.Gantt.Chart.Template.pdf)
 
+**Initial Design Report**
+
+Updates (as of 19 February 2026):
+
+Familiarized team with IO Rodeostat and created Jupyter notebook that directly captures readings from IO Rodeostat. Computed glucose and NaCl requirements for different blood ranges. Once the connectors arrive, we will begin taking measurements and create our calibration curve. Once this curve is created, we will edit the Jupyter notebook to directly calculate glucose concentrations from the Rodeostat output. 
+
+[Initial Design Report.pptx](https://github.com/user-attachments/files/25423979/Initial.Design.Report.pptx)
+
 
 Initial Prototype
 

@@ -108,8 +108,9 @@ However, the project also faces notable external threats. The glucometer market 
 
 [Glucometer Preliminary Design Presentation.pdf](https://github.com/user-attachments/files/25115353/Glucometer.Preliminary.Design.Presentation.pdf)
 
+[SweetSpot GANTT Chart](https://github.com/user-attachments/files/26286270/SweetSpot.GANTT.Chart.-.Gantt.Chart.Template.1.pdf)
 
-[SweetSpot GANTT Chart - Gantt Chart Template.pdf](https://github.com/user-attachments/files/25115357/SweetSpot.GANTT.Chart.-.Gantt.Chart.Template.pdf)
+
 
 **Initial Design Report**
 

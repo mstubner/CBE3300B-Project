@@ -599,52 +599,10 @@ In the first prototype, the laptop serves as the primary control and data-proces
 
 **Current hardware state:** OLED and Arduino connections are soldered onto a breadboard. The system runs end-to-end from a single Jupyter Notebook.
 
----
 
-### Prototype 2: Fully Standalone Embedded System *(planned)*
-
-The second prototype will migrate all functions to embedded hardware. The microcontroller will directly execute the chronoamperometry routine via the potentiostat analog front end, perform onboard feature extraction and calibration, and display the result on the OLED without any laptop dependency.
-
-**Purpose:**
-- Demonstrate full hardware–software system integration
-- Eliminate dependence on external computing resources
-- Create a portable and self-contained platform
-- Establish a foundation for future miniaturization and deployment
-
-Progression to Prototype 2 is being deferred until the sensing model is validated.
-
----
 
 ## Device Component Sketch
-
-The mature device concept includes the following major components and their interconnections:
-
-```
-  ┌──────────────────┐
-  │  Glucose Test    │
-  │     Strip        │
-  └────────┬─────────┘
-           │ electrochemical signal
-  ┌────────▼─────────┐
-  │   IO Rodeostat   │◄──── USB ────► Laptop (Prototype 1)
-  │  Potentiostat    │              or
-  └────────┬─────────┘         Embedded MCU (Prototype 2)
-           │ current data
-  ┌────────▼─────────┐
-  │  Arduino Uno     │◄──── USB Serial (Python → Arduino)
-  │  Microcontroller │
-  └────────┬─────────┘
-           │ SPI (D8/D9/D10/D11/D13)
-  ┌────────▼─────────┐
-  │  128×64 OLED     │
-  │     Display      │
-  └──────────────────┘
-
-  Power: USB (Prototype 1) → Battery pack (Prototype 2)
-  Enclosure: 3D-printed or laser-cut case (planned)
-```
-
-All electrical connections between the Arduino and OLED have been soldered onto a breadboard as of April 8, 2026. The next step is designing and fabricating an enclosure to house all components.
+INSERT HERE
 
 ---
 
@@ -656,15 +614,15 @@ The minimum viable product (MVP) is defined as a device that can:
 2. Run a chronoamperometric measurement automatically
 3. Compute glucose concentration from the measured signal
 4. Display the result on the OLED screen within a few seconds
-5. Operate without a connected laptop
+5. Be fully enclosed within a 3D printed box
+6. Calculate error margins to write out specs of our device
 
 The current gap between the prototype and the MVP centers on two parallel tracks:
 
-**Track 1 — Sensing Validation (blocking)**
-- Resolve measurement reproducibility before advancing hardware integration
-- Explore alternative voltage protocols that better match strip operation
-- Evaluate additional signal features (integrated current, decay curve fitting)
-- Improve signal processing (smoothing, baseline correction)
+**Track 1 — Sensing Validation**
+- Resolve measurement reproducibility
+- Calculate error margins
+- Decide on what curve works best for the most amount of concentrations
 - Characterize the validated operating range of the sensor
 
 **Track 2 — Hardware Maturation (in progress)**
@@ -672,10 +630,6 @@ The current gap between the prototype and the MVP centers on two parallel tracks
 - ~~Establish Python → Arduino serial communication~~ ✅ Complete
 - Design and fabricate physical enclosure / casing
 - Mount all components securely within the case
-- Evaluate battery-powered operation
-- Migrate processing to onboard microcontroller (Prototype 2)
-
-Once Track 1 is resolved, the device can be considered a validated glucometer and Track 2 can be completed for full standalone operation.
 
 ---
 
@@ -782,7 +736,6 @@ It does not yet demonstrate:
 
 - Reliable quantitative glucose sensing across repeated measurements
 - Validated concentration prediction
-- Standalone operation without a connected laptop
 - Finished physical enclosure
 
 That makes the current project a successful **sensing-platform and display-integration prototype**, advancing toward but not yet achieving a validated standalone glucometer.
@@ -800,5 +753,5 @@ That makes the current project a successful **sensing-platform and display-integ
 ### Reports and Presentations
 
 - [Glucometer Preliminary Design Presentation](https://github.com/user-attachments/files/25115353/Glucometer.Preliminary.Design.Presentation.pdf)
-- [SweetSpot GANTT Chart](https://github.com/user-attachments/files/26286270/SweetSpot.GANTT.Chart.-.Gantt.Chart.Template.1.pdf)
+- [SweetSpot GANTT Chart][SweetSpot GANTT Chart - Gantt Chart Template (2).pdf](https://github.com/user-attachments/files/26580797/SweetSpot.GANTT.Chart.-.Gantt.Chart.Template.2.pdf)
 - [Initial Design Report](https://github.com/user-attachments/files/25423979/Initial.Design.Report.pptx)

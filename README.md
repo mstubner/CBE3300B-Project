@@ -548,40 +548,8 @@ Although the system can successfully run chronoamperometry, process the signal, 
 
 ## System Architecture
 
-The system follows a modular sensing pipeline:
+INSERT LAUREN'S DRAWING HERE
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                      SENSOR LAYER                        │
-│   Commercial glucose test strip                          │
-│   → Electrochemical reaction produces current            │
-└────────────────────────┬────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────┐
-│                   ACQUISITION LAYER                      │
-│   IO Rodeostat potentiostat                              │
-│   → Applies voltage step, records current over time      │
-└────────────────────────┬────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────┐
-│                   PROCESSING LAYER                       │
-│   Python / Jupyter Notebook                              │
-│   → Data collection and visualization                    │
-│   → Feature extraction (peak / fixed-time current)      │
-│   → Calibration analysis                                 │
-│   → Concentration computation                            │
-│   → Serial broadcast to Arduino                          │
-└────────────────────────┬────────────────────────────────┘
-                         │ USB Serial
-┌────────────────────────▼────────────────────────────────┐
-│                    OUTPUT LAYER                          │
-│   Arduino Uno + 128×64 OLED (SPI)                        │
-│   → Receives concentration value over serial             │
-│   → Displays glucose reading on screen                   │
-└─────────────────────────────────────────────────────────┘
-```
-
-**Planned future output layer:** Arduino directly executes the measurement and processing pipeline with no laptop dependency.
 
 ---
 
@@ -622,6 +590,7 @@ The current gap between the prototype and the MVP centers on two parallel tracks
 **Track 1 — Sensing Validation**
 - Resolve measurement reproducibility
 - Calculate error margins
+- Normalize strip behavior with distilled water readings
 - Decide on what curve works best for the most amount of concentrations
 - Characterize the validated operating range of the sensor
 

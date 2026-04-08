@@ -1,300 +1,566 @@
-# CBE3300B-Project
+# SweetSpot Glucometer Project
 
-Progress Log
+![Status](https://img.shields.io/badge/status-intermediate%20prototype-orange)
+![Platform](https://img.shields.io/badge/platform-Arduino%20%2B%20Python-blue)
+![Hardware](https://img.shields.io/badge/hardware-IO%20Rodeostat-green)
+![Display](https://img.shields.io/badge/display-128×64%20OLED-purple)
 
-**February 12, 2026**
+SweetSpot is a computer-dependent electrochemical glucose sensing prototype designed to evaluate whether a commercial glucose test strip, paired with an IO Rodeostat potentiostat, can be used to measure glucose concentration through chronoamperometry.
 
-We connected the IO Rodeostat potentiostat to a laptop and conducted an initial chronoamperometry test using a commercial glucose test strip and legacy connector leads. The goal of this first experiment was to verify that the Rodeostat could successfully apply a potential step to the strip and record a measurable current response over time. At this stage, the emphasis was not yet on obtaining accurate glucose concentration values, but rather on confirming that the hardware and software system could generate and capture an electrochemical signal in the expected format.
+The long-term goal is to develop a low-cost and accessible glucometer that can measure glucose concentration, process the signal, and display the result in real time on an embedded screen. The project is being developed in stages, beginning with a laptop-based prototype for sensing validation and progressing toward a fully standalone embedded device.
 
-During this stage, we developed a Python script in a Jupyter Notebook to interface with the Rodeostat, collect data, and visualize the results. The script generated current versus time plots for each run, which allowed us to verify that the system was recording transient current behavior following the applied voltage step. This was an important first milestone because it established that the device could perform chronoamperometry in a way that was suitable for later calibration and signal analysis. It also created the software foundation for all subsequent experiments, including data collection, plotting, and eventual concentration prediction.
+---
 
-From an engineering perspective, this phase functioned as a feasibility test of the acquisition system. Before a sensor can be evaluated quantitatively, it must first be shown that the instrumentation can consistently produce a usable signal. Confirming this signal pathway was therefore a necessary prerequisite for later calibration, model development, and hardware integration.
+- [About](#about)
+- [Project Goals](#project-goals)
+- [Why This Project Matters](#why-this-project-matters)
+- [Scientific and Engineering Basis](#scientific-and-engineering-basis)
+- [Preliminary Calculations](#preliminary-calculations)
+- [Progress Log](#progress-log)
+  - [February 12 — Initial Hardware Setup](#february-12-2026--initial-hardware-setup-and-signal-verification)
+  - [February 26 — Calibration Data Collection](#february-26-2026--calibration-data-collection-and-pipeline-improvement)
+  - [March 4 — Full Concentration Dataset](#march-4-2026--full-concentration-dataset-complete)
+  - [March 5 — Initial Calibration Curve](#march-5-2026--initial-calibration-curve)
+  - [March 25 — Validation Testing and Failure Analysis](#march-25-2026--validation-testing-and-failure-analysis)
+  - [April 2 — Arduino Serial Communication and OLED Display](#april-2-2026--arduino-serial-communication-and-oled-display)
+  - [April 8 — Hardware Integration and Soldering](#april-8-2026--hardware-integration-and-soldering)
+- [Current Project Status](#current-project-status)
+- [System Architecture](#system-architecture)
+- [Prototype Plan](#prototype-plan)
+- [Device Component Sketch](#device-component-sketch)
+- [Path to Minimum Viable Product](#path-to-minimum-viable-product)
+- [Market Relevance and Application](#market-relevance-and-application)
+- [SWOT Analysis](#swot-analysis)
+- [Future Work](#future-work)
 
-**February 26, 2026**
+---
 
-We prepared a full set of standard glucose solutions for calibration and improved the data pipeline used to process experimental results. The updated Python workflow was designed not only to generate current versus time plots, but also to export raw data to CSV files for later analysis. This improvement made the system more reproducible and better suited for engineering analysis, since it allowed us to retain complete datasets rather than relying only on visual inspection of plots.
+## About
 
-At this stage, we collected our first full datasets for high and very high glucose concentrations. These experiments were intended to establish how the electrochemical response changed as glucose concentration increased. By systematically varying concentration and recording the corresponding current traces, we began building the dataset required for a calibration model. This represented the transition from simple system verification to quantitative sensor characterization.
+SweetSpot pairs a commercial glucose test strip with an IO Rodeostat potentiostat to measure glucose concentration electrochemically. A Python-based Jupyter Notebook workflow applies a chronoamperometric potential step, records the resulting current response, extracts a calibration feature, and transmits the computed glucose concentration over serial to an Arduino Uno, which displays the result on a 128×64 OLED screen.
 
-The electrode configuration used during testing was working electrode equals gray, reference electrode equals white, and counter electrode equals black. Maintaining a consistent electrode configuration was essential because any reversal or inconsistency in these connections would alter the measured response and compromise the validity of the calibration data.
+At its current stage, the system demonstrates electrochemical signal acquisition, Python-based data processing, calibration curve construction, Arduino serial communication, and OLED display output. The OLED and Arduino connections have been soldered onto a breadboard as part of the transition toward a cased, portable device. The sensing model has not yet been fully validated for reliable glucose prediction across all repeated measurements.
 
-From a chemical engineering standpoint, this stage corresponded to establishing the input-output behavior of the sensing system. In any measurement process, a calibration dataset must be built by relating a known input, in this case glucose concentration, to a measurable output, in this case current. The purpose of these experiments was therefore to determine whether the electrochemical signal could serve as a reliable state variable for concentration prediction.
+---
 
-**March 4, 2026**
+## Project Goals
 
-We completed all initial concentration measurements across the prepared glucose standards. This marked an important transition from data collection to calibration analysis, because we now had a full set of experimental responses that could be compared across concentrations. By this point, the system had moved beyond simple proof of concept and into the stage of evaluating whether its output could be used quantitatively.
+The project was designed to build a system that can:
 
-With the complete dataset in hand, we began comparing the shape and magnitude of the current responses for each concentration. The purpose of this analysis was to determine whether there was a consistent and physically meaningful relationship between electrochemical response and glucose concentration. If such a relationship existed, then a calibration equation could be constructed and later used for prediction of unknown samples.
+- Run a chronoamperometry measurement on a commercial glucose test strip
+- Extract a meaningful electrochemical feature from the current response (e.g., current at a fixed time point)
+- Convert that feature into glucose concentration using an experimentally derived calibration curve
+- Display the computed glucose concentration digitally in real time
 
-This stage was especially important because it framed the project as an engineering measurement problem rather than only a coding or hardware problem. The quality of the final glucometer depends not just on whether the Rodeostat can record current, but on whether the recorded current contains sufficient and reproducible information to distinguish between concentrations.
+The development plan includes two major stages:
 
-**March 5, 2026 — Calibration Curve**
+1. **Computer-dependent prototype** — validates sensing, calibration, and display integration via laptop
+2. **Standalone embedded prototype** — migrates all processing and display functions to embedded hardware
 
-Using the initial concentration data, we constructed our first calibration model relating electrochemical response to glucose concentration. The resulting equation was:
+---
 
-Glucose concentration (mM) = 1.1978 × (max current in μA) − 0.4567
-<img width="936" height="305" alt="Screenshot 2026-03-26 at 2 03 40 PM" src="https://github.com/user-attachments/assets/7304cc3f-2995-456e-9858-e5e4f0a6e959" />
+## Why This Project Matters
 
+A glucometer is a portable medical device used to measure blood glucose concentration. It is essential for diabetes monitoring and management, especially for individuals who need frequent readings to guide daily decisions.
 
-This equation represented the first functional mapping from measured sensor output to predicted glucose concentration. In practical terms, it allowed the system to move from simply recording an electrochemical signal to operating as a quantitative sensing platform. Once the maximum current from a given run was measured, the calibration equation could be used to estimate the glucose concentration associated with that response.
+As diabetes prevalence continues to rise, the need for affordable and accessible glucose monitoring tools becomes more urgent. This challenge is particularly acute in underserved urban communities, where access to routine testing and early diagnosis may be limited.
 
-The reasoning behind using current as the measured variable comes from the fundamentals of chronoamperometry. Under ideal diffusion-controlled conditions, the transient current should follow the Cottrell equation:
+In Philadelphia specifically, diabetes prevalence has increased by more than 50% over the past 15 years. Nearly one in three individuals living with diabetes in the city are unaware of their condition. In 2017, diabetes was the sixth leading cause of death in Philadelphia, accounting for 374 deaths. Our project is motivated by the idea that a lower-cost electrochemical sensing platform could eventually support broader glucose awareness and improve access to screening.
 
-<img width="285" height="117" alt="image" src="https://github.com/user-attachments/assets/fdda0aaa-203e-4aba-a888-078e02fedd13" />
+---
 
+## Scientific and Engineering Basis
 
-This relationship predicts that current is proportional to concentration, assuming the number of electrons transferred, electrode area, and diffusivity remain constant. Because of this, features derived from the current response, such as maximum current or current at a specified time, are reasonable candidates for calibration. Our initial choice of max current was based on the expectation that larger glucose concentrations should produce correspondingly larger electrochemical responses.
+Electrochemical glucometers work by coupling a selective biochemical reaction to an electrical measurement.
+
+Commercial glucose test strips typically rely on **glucose oxidase (GOx)**, which reacts selectively with glucose in the sample. In the presence of molecular oxygen, GOx catalyzes the oxidation of D-glucose to D-gluconolactone, producing hydrogen peroxide (H₂O₂) as a byproduct. This reaction provides the chemical selectivity necessary for accurate glucose sensing.
+
+The generated H₂O₂ serves as the electroactive species. When a constant potential is applied by the potentiostat, H₂O₂ is oxidized at the working electrode, generating an electrical current proportional to the concentration of glucose originally present in the sample.
+
+This project uses **chronoamperometry**, where the potential is stepped to a fixed value and the current is measured over time. Under ideal diffusion-controlled conditions, the time-dependent response follows the **Cottrell equation**:
+
+$$i(t) = \frac{nFAC\sqrt{D}}{\sqrt{\pi t}}$$
+
+Where:
+- $i(t)$ = current at time $t$
+- $n$ = number of electrons transferred
+- $F$ = Faraday's constant
+- $A$ = electrode area
+- $C$ = analyte concentration
+- $D$ = diffusion coefficient
+
+This relationship predicts that current is proportional to analyte concentration at any fixed time point, providing the physical justification for using a single current value as a calibration feature. Features such as maximum current, current at a fixed time, or current decay behavior can in principle be used to estimate glucose concentration.
+
+This theoretical framework guided our calibration strategy and feature selection throughout the project.
+
+---
+
+## Preliminary Calculations
+
+### Blood Simulant (NaCl Stock Solution)
+
+To mimic the electrolyte balance of human blood, we prepared a 100 mL stock solution at 140 mmol/L NaCl — the standard NaCl concentration in human blood.
+
+$$\left(140 \frac{\text{mmol}}{\text{L}}\right)\left(\frac{1 \text{ mol}}{1000 \text{ mmol}}\right)\left(\frac{58.44 \text{ g}}{\text{mol}}\right)\left(\frac{100 \text{ mL}}{1000 \text{ mL/L}}\right) = 0.818 \text{ g NaCl}$$
+
+### Glucose Standards
+
+Glucose standards were prepared by dissolving known masses of glucose (MW = 180.156 g/mol) in 25 mL of stock solution:
+
+$$C \text{ (mM)} = \frac{\text{mass (g)}}{180.156 \text{ g/mol} \times 0.025 \text{ L}} \times 1000$$
+
+<img width="492" height="244" alt="Glucose Standards Table" src="https://github.com/user-attachments/assets/97abdf26-e984-4bfc-b0cf-d5142b466d45" />
+
+These standards span the clinically relevant glucose range, from normal fasting levels through extreme diabetic concentrations, allowing us to characterize both the linear sensing regime and its breakdown at high concentrations.
+
+### Back-of-the-Envelope Performance Estimate
+
+Under ideal Cottrell behavior, we can estimate the expected current magnitude for a typical glucose concentration. For a glucose concentration of 5 mM (normal fasting):
+
+- Diffusivity of H₂O₂ in aqueous solution: $D \approx 1.4 \times 10^{-5}$ cm²/s
+- Electrode area: $A \approx 0.1$ cm² (estimated for commercial strip)
+- Electrons transferred: $n = 2$
+- At $t = 5$ s:
+
+$$i = \frac{nFAC\sqrt{D}}{\sqrt{\pi t}} = \frac{2 \times 96485 \times 0.1 \times (5 \times 10^{-6}) \times \sqrt{1.4 \times 10^{-5}}}{\sqrt{\pi \times 5}} \approx 0.5 \ \mu\text{A}$$
+
+This estimate is consistent with the current magnitudes observed experimentally (sub-μA to low-μA range), confirming that the Rodeostat is operating in the expected range and that the strip electrochemistry is at least partially compatible with the measurement protocol.
+
+Deviations from this ideal — particularly at high concentrations or across repeated runs — point to the non-ideal effects (enzyme saturation, mass transport inconsistencies) discussed in the failure analysis below.
+
+---
+
+## Progress Log
+
+### February 12, 2026 — Initial Hardware Setup and Signal Verification
+
+We connected the IO Rodeostat potentiostat to a laptop and conducted an initial chronoamperometry test using a commercial glucose test strip and legacy connector leads. The goal was to verify that the Rodeostat could apply a potential step and record a measurable current response over time. At this stage, the emphasis was not yet on accurate glucose concentration values, but on confirming that the hardware and software could generate and capture an electrochemical signal in the expected format.
+
+During this phase, we developed a Python script in a Jupyter Notebook to interface with the Rodeostat, collect data, and visualize the results. The script generated current-versus-time plots for each run, verifying transient current behavior following the applied voltage step.
+
+**Engineering significance:** This phase functioned as a feasibility test of the acquisition system. Before a sensor can be evaluated quantitatively, it must first be shown that the instrumentation can consistently produce a usable signal. Confirming this signal pathway was a necessary prerequisite for all subsequent calibration, model development, and hardware integration.
+
+---
+
+### February 26, 2026 — Calibration Data Collection and Pipeline Improvement
+
+We prepared a full set of standard glucose solutions for calibration and improved the data pipeline used to process experimental results. The updated Python workflow was designed not only to generate current-versus-time plots, but also to export raw data to CSV files for later analysis. This made the system more reproducible and better suited for engineering analysis.
+
+At this stage, we collected our first full datasets for high and very high glucose concentrations, beginning the transition from simple system verification to quantitative sensor characterization.
+
+The electrode configuration used during testing:
+
+| Electrode | Color |
+|-----------|-------|
+| Working   | Gray  |
+| Reference | White |
+| Counter   | Black |
+
+Maintaining a consistent electrode configuration was essential because any reversal or inconsistency in connections would alter the measured response and compromise the validity of calibration data.
+
+---
+
+### March 4, 2026 — Full Concentration Dataset Complete
+
+We completed all initial concentration measurements across the prepared glucose standards. This marked an important transition from data collection to calibration analysis — the system had moved beyond simple proof of concept to evaluating whether its output could be used quantitatively.
+
+With the complete dataset in hand, we began comparing the shape and magnitude of current responses across concentrations to determine whether a consistent and physically meaningful calibration relationship existed.
+
+---
+
+### March 5, 2026 — Initial Calibration Curve
+
+Using the initial concentration data, we constructed our first calibration model relating electrochemical response to glucose concentration:
+
+$$\text{Glucose concentration (mM)} = 1.1978 \times (\text{max current in } \mu\text{A}) - 0.4567$$
+
+<img width="936" height="305" alt="Calibration Curve" src="https://github.com/user-attachments/assets/7304cc3f-2995-456e-9858-e5e4f0a6e959" />
+
+This equation represented the first functional mapping from measured sensor output to predicted glucose concentration. The use of maximum current as the calibration feature was grounded in the Cottrell equation: under ideal diffusion-controlled conditions, current is proportional to concentration, so larger glucose concentrations should produce correspondingly larger electrochemical responses.
 
 At this stage, the calibration equation appeared to provide a usable first approximation of concentration. However, further testing revealed that the relationship was not valid across the full concentration range.
 
-_Key Finding: Breakdown at High Concentrations_
+#### Key Finding: Breakdown at High Concentrations
 
-We observed that the calibration relationship fails at very high glucose concentrations, especially in extreme diabetic ranges. The response becomes nonlinear and unreliable, meaning that current no longer scales in a predictable way with concentration. As a result, the system cannot accurately extrapolate from the initial linear fit to very high concentrations.
+We observed that the calibration relationship fails at very high glucose concentrations, especially in extreme diabetic ranges. The response becomes nonlinear and unreliable, meaning that current no longer scales in a predictable way with concentration.
 
-This behavior is consistent with the physical limitations of commercial glucose test strips, which are generally designed for typical physiological glucose ranges rather than extreme concentrations. At high concentrations, several non-ideal effects may occur. Enzymatic reaction steps within the strip may begin to saturate, which means that increasing glucose no longer produces a proportional increase in reaction rate. In addition, mass transport can become limiting, so the supply of glucose to the electrode surface rather than the intrinsic reaction rate begins to control the response. Under these conditions, the assumptions underlying the simplest form of the Cottrell equation are no longer valid.
+This behavior is consistent with the physical limitations of commercial glucose test strips, which are generally designed for typical physiological glucose ranges. At high concentrations, several non-ideal effects may occur:
 
-From a chemical engineering perspective, this is a classic example of a process leaving its ideal operating regime. In the same way that a reactor model may fail when its assumptions about mixing or kinetics no longer hold, an electrochemical calibration fails when the signal is no longer governed by a single consistent transport and reaction mechanism. The engineering implication is that the sensing system is only valid within a defined operating range, and any calibration model must respect those limits. The data therefore suggested that future work would require either restricting the operating range, selecting a different signal feature, or developing a more advanced calibration model.
+- **Enzyme saturation** — GOx reaction rate can no longer increase proportionally with glucose concentration
+- **Mass transport limitation** — the supply of glucose to the electrode surface, rather than reaction rate, begins to control the response
+- **Deviation from Cottrell behavior** — the assumptions underlying the ideal chronoamperometric model no longer hold
 
-Validation Testing, System Limitations, and Revised Hardware Plan
+From a chemical engineering perspective, this is a classic example of a process leaving its ideal operating regime — analogous to a reactor model failing when kinetic or mixing assumptions break down. The engineering implication is that the sensing system is only valid within a defined operating range, and any calibration model must respect those limits.
 
-Following completion of our initial calibration model, we carried out extensive validation testing to determine whether the system could reliably predict glucose concentration from measured current responses. We rigorously tested the system using repeated trials and evaluated multiple feature extraction approaches, specifically both peak (instantaneous) current and steady-state current measured at a fixed time. The purpose of this stage was to determine whether the calibration framework could generalize beyond the initial dataset and support practical sensing. This expanded the project from simple calibration construction to true sensor validation.
+---
 
-Despite the fact that the Rodeostat is able to apply a voltage step and record current, our results showed that the system does not yet produce accurate or reliable glucose concentration predictions. Although calibration curves can be generated from the collected data for both methods, those relationships do not consistently hold across new measurements, and the predictions are not sufficiently reproducible. This was true for both the peak current approach and the steady-state current approach, indicating that the issue is not specific to a single signal-extraction method but rather reflects a broader limitation of the sensing system. This means that the current system demonstrates electrochemical signal acquisition, but not yet dependable glucose quantification.
+### March 25, 2026 — Validation Testing and Failure Analysis
 
-**March 25 - Theoretical Basis and Deviation from Expected Behavior**
+Following the initial calibration, we carried out extensive validation testing to determine whether the system could reliably predict glucose concentration from new measurements. We evaluated two independent feature extraction methods:
 
+- **Peak (maximum) current**
+- **Steady-state current at a fixed time point**
 
-<img width="927" height="587" alt="PNG image" src="https://github.com/user-attachments/assets/6bb37bf7-06df-4d12-b4ae-94cb09e91898" />
+<img width="927" height="587" alt="Validation Data" src="https://github.com/user-attachments/assets/6bb37bf7-06df-4d12-b4ae-94cb09e91898" />
 
-To better understand this issue, we analyzed the system using the expected theory of chronoamperometry. Under ideal diffusion-limited conditions, the current should follow the Cottrell equation, in which current is directly proportional to analyte concentration and decreases with the inverse square root of time. Based on this model, both peak current and current measured at a fixed time should correlate with glucose concentration if the experiment is governed primarily by diffusion and if the electrochemical reaction pathway is well controlled.
+Although calibration curves could be generated for both methods, neither produced predictions that were sufficiently accurate or reproducible across new trials. This indicates that the issue is not specific to a single feature extraction method, but reflects a broader limitation of the sensing system.
 
-Because both feature extraction methods failed, this indicates that the system is not behaving according to this idealized diffusion-controlled model. If the Cottrell relationship were valid, at least one of these approaches (early-time current or fixed-time current) would have produced a stable calibration. The fact that neither did strongly suggests that additional physical or chemical effects are dominating the system response.
+#### Engineering Interpretation of Failure
 
-_Engineering Interpretation of Failure_
+The fact that both methods failed suggests the system is not behaving according to the idealized diffusion-controlled Cottrell model. Several possible explanations are being considered:
 
-Our experimental results deviate from ideal behavior, suggesting that the system is not operating under a purely diffusion-controlled regime. Several possible causes are being considered.
+**1. Strip–Instrumentation Mismatch**
+Commercial glucose test strips are designed to operate with proprietary voltage waveforms, timing windows, and internal electronics. The simple chronoamperometric step applied by the Rodeostat may not match the strip's intended operating conditions.
 
-1. Strip–Instrumentation Mismatch
-Commercial glucose test strips are designed to operate with proprietary voltage waveforms, timing windows, and internal electronics. The simple chronoamperometric step applied by the Rodeostat may not match these required operating conditions. As a result, the measured current may not directly reflect glucose concentration, even if the electrochemical measurement itself is functioning correctly.
+**2. Mass Transport Limitations**
+The Cottrell equation assumes a well-defined diffusion layer and predictable transport behavior. If glucose transport to the electrode surface is inconsistent or influenced by convection, geometry, or strip structure, current will vary independently of concentration.
 
-2. Mass Transport Limitations
-The Cottrell equation assumes a well-defined diffusion layer and predictable transport behavior. If glucose transport to the electrode surface is inconsistent or influenced by convection, geometry, or strip structure, then current will vary independently of concentration. This would break the expected linear relationship for both peak and steady-state current.
+**3. Nonlinear Reaction Kinetics / Enzyme Effects**
+Strip chemistry may introduce nonlinearities due to enzyme kinetics, reaction intermediates, or saturation effects. If the reaction is not first-order in glucose concentration, current will not scale linearly, causing both calibration methods to fail.
 
-3. Nonlinear Reaction Kinetics / Enzyme Effects
-The strip chemistry may introduce nonlinearities due to enzyme kinetics, reaction intermediates, or saturation effects. If the reaction is no longer first-order in glucose concentration, then current will not scale linearly, causing both calibration methods to fail.
+**4. Signal Instability and Measurement Variability**
+Even small variations in contact quality, strip condition, or timing can disproportionately affect measured current. Since both methods depend on signal consistency, this variability directly degrades predictive accuracy.
 
-4. Signal Instability and Measurement Variability
-Even small variations in contact quality, strip condition, or timing can disproportionately affect measured current. Because both methods rely on consistent signal behavior (either maximum or fixed-time value), variability directly degrades predictive accuracy.
+#### Hardware Verification
 
-_Hardware Verification_
+We physically inspected the Rodeostat, confirmed the device setup, and checked all wiring and connections. No clear hardware fault was identified. This supports the conclusion that the limitation is not a fundamental device failure, but rather incompatibility between the sensing method and strip measurement conditions.
 
-We also considered whether the issue might arise from the hardware itself. To investigate this, we confirmed that the Rodeostat was set up properly and physically inspected the device for any obvious faults. No clear hardware issue was identified. This supports the conclusion that the problem is not due to a fundamental device failure, but rather due to limitations in sensing compatibility and measurement conditions.
+**Engineering conclusion:** At this stage, the system cannot yet be considered a reliable glucometer. Although it successfully performs chronoamperometry and records current data, the measured signal cannot yet be translated into accurate concentration values with sufficient confidence. Both calibration approaches failed validation, indicating a systemic limitation rather than a methodological error.
 
-_Engineering Implication_
+---
 
-At this stage, the system cannot yet be considered a reliable glucometer because it does not satisfy the assumptions required for stable quantitative sensing. Although it successfully performs chronoamperometry and records current data, the measured signal cannot yet be translated into accurate concentration values with sufficient confidence.
+### April 2, 2026 — Arduino Serial Communication and OLED Display
 
-Importantly, this conclusion is strengthened by the fact that multiple independent calibration approaches (instantaneous and steady-state) were tested and both failed validation, indicating a systemic limitation rather than a methodological error.
+Building on the validated acquisition pipeline, we implemented the communication link between Python and the Arduino Uno, and successfully drove the 128×64 OLED display with computed glucose values.
 
-In engineering terms:
+#### OLED Wiring (SPI Interface)
 
-Acquisition layer → working
-Processing layer → working
-Sensing model → not validated
-Revised Project Status
+The OLED display was wired to the Arduino Uno using the SPI protocol, following the pin mapping shown below:
 
-The system presently functions as a computer-dependent electrochemical sensing prototype. It demonstrates:
+| OLED Pin | Arduino Pin |
+|----------|-------------|
+| DC (Data/Command) | D8 |
+| RES (Reset) | D9 |
+| CS (Chip Select) | D10 |
+| MOSI (Data) | D11 |
+| SCK (Clock) | D13 |
 
-Electrochemical signal acquisition
-Data collection and visualization
-Calibration framework implementation
+![Arduino OLED Wiring Diagram](https://github.com/user-attachments/assets/Screenshot_2026-04-08_at_4_51_39_PM.png)
 
-However, it does not yet achieve:
+**Reference:** [The Beginner's Guide to Display Text, Image & Animation on OLED Display by Arduino](https://www.instructables.com/The-Beginners-Guide-to-Display-Text-Image-Animatio/) was used to guide the initial OLED setup and text rendering.
 
-Reliable glucose concentration prediction
-Arduino communication
-OLED display output
-Standalone device operation
+#### Serial Communication Workflow
 
-Because accurate sensing is not yet achieved, hardware integration steps (Arduino + OLED) are being deferred until the sensing model is validated.
+The Python Jupyter Notebook workflow was extended to:
 
-_System Architecture_
+1. Run the chronoamperometry measurement via the Rodeostat
+2. Extract the calibration feature from the current-time response
+3. Compute the predicted glucose concentration using the calibration equation
+4. **Broadcast the concentration value to the Arduino over USB serial**
 
-Even in its current state, the project still follows a modular sensing pipeline:
+The Arduino sketch was written to:
 
-Sensor Layer
-Glucose test strip produces current from electrochemical reaction
+1. Listen on the serial port for incoming concentration values from Python
+2. Parse the received string
+3. Display the glucose concentration on the OLED in real time
 
-Acquisition Layer
-IO Rodeostat applies voltage and records current
+This completed the full sensing-to-display pipeline within the computer-dependent prototype architecture.
 
-Processing Layer (Core System)
-Python (Jupyter Notebook):
+---
 
-Data collection
-Signal visualization
-Feature extraction (peak and fixed-time current)
-Calibration analysis
+### April 8, 2026 — Hardware Integration and Soldering
 
-Output Layer (Current)
-Laptop display (plots + predicted glucose values)
+This week marked a significant step toward a more robust and portable device. The system moved from loose jumper wire connections to a soldered assembly.
 
-Output Layer (Planned)
-Arduino + OLED display (future integration)
+**Key updates:**
 
-_Future Work_
+- Successfully connected the Rodeostat, Arduino Uno, and OLED display together through Python running in Jupyter Notebook — the full pipeline (measure → process → display) now operates end-to-end from a single notebook
+- The OLED screen was soldered onto a breadboard, along with the wiring connections to the Arduino, replacing previous loose jumper wire connections with more reliable soldered joints
+- This soldered configuration is more mechanically stable and represents the first step toward mounting all components within a physical enclosure
 
-Our immediate focus is to resolve the sensing limitation before proceeding with hardware integration. Planned next steps include:
+**Current hardware state:** The system is operational as a benchtop prototype. The next phase focuses on enclosure design and component mounting.
 
-Testing alternative voltage protocols (to better match strip operation)
-Exploring additional feature extraction methods (e.g., integrated current, decay fitting)
-Improving signal processing (smoothing, baseline correction)
-Investigating strip-specific operating requirements
-Evaluating whether commercial strips are fundamentally compatible with Rodeostat-based measurements
-
-Once a reliable calibration model is established, we will proceed with:
-
-Python → Arduino serial communication
-OLED display integration
-Transition to a standalone embedded system
-Current Project Definition
-
-The current prototype is best described as a:
-
-Computer-dependent electrochemical sensing system with unresolved measurement accuracy limitations
-
-It successfully demonstrates:
-
-Signal acquisition
-Data processing
-Calibration construction
-
-But does not yet achieve:
-
-Reliable quantitative sensing
-****Preliminary Design Report****
-
-**Introduction**
-
-A glucometer is a small, portable medical device used to measure the concentration of glucose in blood. It is most commonly used by individuals with diabetes to monitor blood sugar levels and inform daily management decisions. As rates of diabetes continue to rise worldwide, access to reliable and affordable glucose monitoring has become an increasingly important public health concern.
-This trend is reflected locally in Philadelphia, where diabetes prevalence has increased by more than 50% over the past 15 years. Nearly one in three individuals living with diabetes in the city are unaware of their condition, highlighting a critical gap in early detection and routine monitoring. In 2017, diabetes was the sixth leading cause of death in Philadelphia, accounting for 374 deaths. These statistics highlight the need for low-cost, accessible glucometers that can expand glucose testing and support earlier intervention in at-risk populations.
-
-**Project Goals**
-Build a system that:
-- Runs a chronoamperometry measurement on a commercial glucose test strip
-- Extracts a robust electrochemical (current) feature (e.g., current at 10 s)
-- Converts that feature to glucose concentration using an experimentally derived calibration curve
-- Shows the result on a digital screen in real time
-
-This project will be developed in two stages:
-1. A computer-dependent prototype validating sensing and calibration
-2. A standalone embedded prototype integrating measurement and display
-
-**Physical and Chemical Principles of a Glucometer**
-Electrochemical glucometers operate by coupling a selective biochemical reaction with an electrochemical transduction mechanism to convert glucose concentration into a measurable electrical signal. Commercial glucose test strips rely on the enzyme glucose oxidase (GOx), which selectively reacts with glucose present in the sample. In the presence of molecular oxygen, glucose oxidase catalyzes the oxidation of D-glucose to D-gluconolactone, producing hydrogen peroxide (H₂O₂) as a reaction byproduct. Because this reaction is highly specific to glucose, it provides the chemical selectivity necessary for accurate glucose sensing.
-The generated hydrogen peroxide serves as the electroactive species in the sensing process. When a constant potential is applied across the electrode surface by a potentiostat, hydrogen peroxide is electrochemically oxidized at the working electrode. This oxidation reaction results in the transfer of electrons to the electrode, generating an electrical current. The magnitude of this current is directly related to the rate of hydrogen peroxide oxidation and, by extension, to the concentration of glucose originally present in the sample. In this way, chemical reaction kinetics at the electrode surface are converted into an electrical signal that can be measured with high sensitivity.
-
-The electrochemical measurement is performed using chronoamperometry, in which the electrode potential is stepped to a fixed value and the resulting current is recorded as a function of time. Under diffusion-limited conditions, the time-dependent current response follows the Cottrell equation, which predicts that current decays proportionally to the inverse square root of time due to diffusion of electroactive species toward the electrode. Importantly, at a fixed time point after the potential step, the Cottrell equation shows that the measured current depends linearly on the concentration of the electroactive species. This relationship provides the physical justification for extracting a single current value at a specified time and using it as a robust electrochemical feature.
-By measuring the steady or quasi-steady current at a fixed time for a series of known glucose standards, a calibration curve relating current to glucose concentration can be constructed. Once this calibration relationship is established, measured current values from unknown samples can be converted directly into glucose concentration using a linear fit. This combination of enzyme specificity, electrochemical oxidation, diffusion-controlled transport, and calibration-based signal interpretation forms the physical and chemical foundation of the glucometer system implemented in this project.
-
-**Preliminary Calculations**
-Blood Stimulant (NaCl Stock Solution)
-To mimic the electrolyte balance of human blood, we will create a 100mL stock solution with a concentration of 140 mmol NaCl/L, which is the standard NaCl concentration in human blood.
-
-(140 mmol/L)  (1 mol/1000 mmol)  (58.44 g/mol)   (1L/1000 mL)  (100 mL) = 0.818 g NaCl
-
-Glucose Standards
-We prepared four standards by adding specific masses of glucose to 25 mL of our stock solution. The molar mass of glucose is 180.156 g/mpl. The concentrations were calculated as follows:
-
-**Glucose Standards**
-Concentration (mM) = Mass (g) / 180.156 g/mol0.025 L   1000
-
-
-<img width="492" height="244" alt="Screenshot 2026-02-05 at 7 49 14 PM" src="https://github.com/user-attachments/assets/97abdf26-e984-4bfc-b0cf-d5142b466d45" />
-
-
-**Proposed Prototypes**
-
-_**Prototype 1: Computer Based Interface**_
-In this initial prototype, the laptop serves as the primary control and data-processing platform, while the Arduino is dedicated solely to user-interface output.
-A Python-based workflow provided by IO Rodeo is used to execute the chronoamperometry measurement. The script controls the potentiostat, applies the required potential step, and records the resulting current–time response from the commercial glucose test strip. From this dataset, a robust electrochemical feature (such as the current at a specified time point) is extracted and converted to glucose concentration using an experimentally derived calibration curve. The calculated glucose value is then transmitted to an Arduino Uno over a USB serial connection. The Arduino receives this value and displays the glucose concentration on a 128 × 64 I2C OLED screen.
-
-Purpose of Prototype 1
-
+---
+
+## Current Project Status
+
+The system presently functions as a **computer-dependent electrochemical sensing prototype with active hardware integration in progress**.
+
+### What is working
+
+- [x] Electrochemical signal acquisition with the IO Rodeostat
+- [x] Python-based data collection in Jupyter Notebook
+- [x] Current-versus-time visualization
+- [x] Export of raw data to CSV
+- [x] Construction of calibration relationships from experimental data
+- [x] Serial communication from Python to Arduino
+- [x] OLED display of computed glucose concentration
+- [x] Soldered OLED and Arduino connections on breadboard
+
+### What is not yet working
+
+- [ ] Reliable glucose concentration prediction across repeated measurements
+- [ ] Fully validated sensing model
+- [ ] Standalone device operation (no laptop required)
+- [ ] Physical enclosure / casing
+
+Although the system can successfully run chronoamperometry, process the signal, and display a result on the OLED, the measured signal does not yet translate into sufficiently accurate and reproducible glucose predictions to constitute a validated glucometer.
+
+---
+
+## System Architecture
+
+The system follows a modular sensing pipeline:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                      SENSOR LAYER                        │
+│   Commercial glucose test strip                          │
+│   → Electrochemical reaction produces current            │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│                   ACQUISITION LAYER                      │
+│   IO Rodeostat potentiostat                              │
+│   → Applies voltage step, records current over time      │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│                   PROCESSING LAYER                       │
+│   Python / Jupyter Notebook                              │
+│   → Data collection and visualization                    │
+│   → Feature extraction (peak / fixed-time current)      │
+│   → Calibration analysis                                 │
+│   → Concentration computation                            │
+│   → Serial broadcast to Arduino                          │
+└────────────────────────┬────────────────────────────────┘
+                         │ USB Serial
+┌────────────────────────▼────────────────────────────────┐
+│                    OUTPUT LAYER                          │
+│   Arduino Uno + 128×64 OLED (SPI)                        │
+│   → Receives concentration value over serial             │
+│   → Displays glucose reading on screen                   │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Planned future output layer:** Arduino directly executes the measurement and processing pipeline with no laptop dependency.
+
+---
+
+## Prototype Plan
+
+### Prototype 1: Computer-Dependent System *(current)*
+
+In the first prototype, the laptop serves as the primary control and data-processing platform. The Rodeostat performs the chronoamperometric measurement, Python handles signal processing and calibration, and the computed glucose value is transmitted to the Arduino over USB serial for display on the OLED.
+
+**Purpose:**
 - Validate electrochemical sensing performance and calibration methodology
 - Leverage a high-level computing environment to simplify data processing
 - Minimize embedded system complexity during early development
 - Enable rapid iteration, debugging, and performance evaluation
 
+**Current hardware state:** OLED and Arduino connections are soldered onto a breadboard. The system runs end-to-end from a single Jupyter Notebook.
 
-_**Prototype 2: Fully Standalone Embedded Measurement System**_
+---
 
-The second prototype advances the system toward a fully integrated, portable device by migrating all measurement, processing, and display functions to the embedded platform.
-In this configuration, the Arduino (or an upgraded microcontroller, if required) directly executes the chronoamperometry routine. The microcontroller interfaces with the potentiostat’s analog front end (AFE) to acquire current data from the glucose test strip in real time. Onboard signal processing routines extract the selected electrochemical feature, which is then converted to glucose concentration using stored calibration parameters. The computed glucose value is displayed directly on the 128 × 64 I2C OLED, with no reliance on external computing resources. The system operates entirely autonomously once powered.
+### Prototype 2: Fully Standalone Embedded System *(planned)*
 
-Purpose of Prototype 2
+The second prototype will migrate all functions to embedded hardware. The microcontroller will directly execute the chronoamperometry routine via the potentiostat analog front end, perform onboard feature extraction and calibration, and display the result on the OLED without any laptop dependency.
 
+**Purpose:**
 - Demonstrate full hardware–software system integration
-- Validate embedded data acquisition and signal-processing capability
-- Enable a portable, self-contained glucose measurement platform
-- Establish a foundation for future miniaturization and field deployment
+- Eliminate dependence on external computing resources
+- Create a portable and self-contained platform
+- Establish a foundation for future miniaturization and deployment
 
-_**Target Market, Pricing, and Marketing Strategy**_
+Progression to Prototype 2 is being deferred until the sensing model is validated.
 
-The primary target market for this glucometer is underserved and low-income populations in urban environments, with an initial focus on Philadelphia, where diabetes prevalence is disproportionately high in communities experiencing poverty. Diabetes rates in Philadelphia are nearly twice as high in low-income populations, making affordability and ease of use critical design priorities.
+---
 
-Key target groups include:
+## Device Component Sketch
 
-- Adults aged 30–65, when Type 2 diabetes risk is highest
-- Low-income individuals and families, particularly those with limited access to routine healthcare
-- Undiagnosed or pre-diabetic individuals, who may not yet be engaged in regular glucose monitoring
-- Community health clinics, nonprofits, and outreach programs that provide screening and preventive care
-- Secondary markets include students, uninsured individuals, and older adults who benefit from a simplified, low-cost monitoring option.
+The mature device concept includes the following major components and their interconnections:
 
-The marketing strategy focuses on accessibility, trust, and community-based distribution, rather than traditional consumer retail channels.
+```
+  ┌──────────────────┐
+  │  Glucose Test    │
+  │     Strip        │
+  └────────┬─────────┘
+           │ electrochemical signal
+  ┌────────▼─────────┐
+  │   IO Rodeostat   │◄──── USB ────► Laptop (Prototype 1)
+  │  Potentiostat    │              or
+  └────────┬─────────┘         Embedded MCU (Prototype 2)
+           │ current data
+  ┌────────▼─────────┐
+  │  Arduino Uno     │◄──── USB Serial (Python → Arduino)
+  │  Microcontroller │
+  └────────┬─────────┘
+           │ SPI (D8/D9/D10/D11/D13)
+  ┌────────▼─────────┐
+  │  128×64 OLED     │
+  │     Display      │
+  └──────────────────┘
 
-Primary distribution pathways:
+  Power: USB (Prototype 1) → Battery pack (Prototype 2)
+  Enclosure: 3D-printed or laser-cut case (planned)
+```
 
-- Community health clinics and federally qualified health centers (FQHCs)
+All electrical connections between the Arduino and OLED have been soldered onto a breadboard as of April 8, 2026. The next step is designing and fabricating an enclosure to house all components.
+
+---
+
+## Path to Minimum Viable Product
+
+The minimum viable product (MVP) is defined as a device that can:
+
+1. Accept a commercial glucose test strip
+2. Run a chronoamperometric measurement automatically
+3. Compute glucose concentration from the measured signal
+4. Display the result on the OLED screen within a few seconds
+5. Operate without a connected laptop
+
+The current gap between the prototype and the MVP centers on two parallel tracks:
+
+**Track 1 — Sensing Validation (blocking)**
+- Resolve measurement reproducibility before advancing hardware integration
+- Explore alternative voltage protocols that better match strip operation
+- Evaluate additional signal features (integrated current, decay curve fitting)
+- Improve signal processing (smoothing, baseline correction)
+- Characterize the validated operating range of the sensor
+
+**Track 2 — Hardware Maturation (in progress)**
+- ~~Solder OLED and Arduino connections~~ ✅ Complete
+- ~~Establish Python → Arduino serial communication~~ ✅ Complete
+- Design and fabricate physical enclosure / casing
+- Mount all components securely within the case
+- Evaluate battery-powered operation
+- Migrate processing to onboard microcontroller (Prototype 2)
+
+Once Track 1 is resolved, the device can be considered a validated glucometer and Track 2 can be completed for full standalone operation.
+
+---
+
+## Market Relevance and Application
+
+The long-term target market for this device is underserved and low-income populations, particularly in urban environments where diabetes prevalence is high and access to healthcare may be limited.
+
+Potential user groups include:
+
+- Adults aged 30–65 at elevated risk for Type 2 diabetes
+- Low-income individuals and families
+- Undiagnosed or pre-diabetic individuals not yet engaged in regular monitoring
+- Community health clinics, federally qualified health centers (FQHCs), and nonprofit screening programs
+- Students, uninsured individuals, and older adults who need simpler, lower-cost monitoring options
+
+**Distribution pathways:**
+- Community health clinics and FQHCs
 - Nonprofit organizations focused on chronic disease prevention
 - Local health departments and diabetes outreach programs
 - University- or hospital-affiliated screening initiatives
-  
-Marketing emphasis:
 
-- Simple, easy-to-use design requiring minimal training
-- Clear digital display for immediate interpretation
-- Messaging centered on early detection, prevention, and empowerment
+The larger design goal is not to create a premium consumer medical device, but to explore the feasibility of a low-cost sensing system that could support broader glucose awareness and improve access to screening in communities where it is needed most.
 
-By partnering with trusted local organizations and prioritizing usability and affordability, this glucometer is positioned not as a luxury medical device, but as a basic health tool that supports routine glucose awareness and early intervention.
+---
 
-**SWOT Analysis**
+## SWOT Analysis
 
-A strengths, weaknesses, opportunities, and threats (SWOT) analysis was conducted to evaluate the potential impact and feasibility of the proposed glucometer system. One of the primary strengths of this device is its significant medical utility. Glucose monitoring is a critical component of diabetes management, resulting in consistent and recurring demand for reliable testing technologies. Additionally, the system provides real-time feedback, allowing users to immediately assess glucose levels and make informed health decisions. Its portable design and user-friendly interface further enhance accessibility, making the device practical for daily use in a variety of settings, including home monitoring and community health screenings.
+### Strengths
 
-Despite these advantages, several limitations must be considered. Accuracy can vary depending on user conditions such as sample handling, environmental factors, and device calibration, which may affect measurement reliability. Furthermore, manufacturing costs can be relatively high at smaller production scales, particularly during early development phases when economies of scale have not yet been achieved. These factors may influence both device affordability and widespread adoption.
+- Strong medical relevance and recurring demand for glucose monitoring
+- Real-time signal acquisition and direct display feedback
+- Portable sensing concept with low-cost component choices
+- Modular architecture enables independent development of sensing and display layers
+- Interdisciplinary combination of electrochemistry, instrumentation, and embedded systems
 
-At the same time, significant opportunities exist for expansion and impact. Rising diabetes prevalence both globally and locally increases the need for accessible monitoring technologies, particularly in underserved communities. There is also potential to optimize the device for manufacturability and large-scale production, which could reduce costs and improve accessibility. Advances in embedded electronics, biosensor fabrication, and scalable production methods provide pathways for future refinement and commercialization.
+### Weaknesses
 
-However, the project also faces notable external threats. The glucometer market already includes well-established commercial devices with strong brand recognition and regulatory approval, creating substantial competition. Additionally, inaccuracies in glucose measurements carry potential health risks, introducing liability concerns that must be addressed through careful design, calibration, validation, and regulatory compliance. These factors highlight the importance of rigorous testing and quality assurance as the system moves toward potential real-world deployment.
+- Sensing accuracy not yet validated across repeated measurements
+- Current calibration relationships are not sufficiently reproducible
+- Dependence on laptop-based processing in current prototype
+- Hardware integration (enclosure, standalone operation) remains incomplete
+- Small-scale development limits practical deployment at this stage
 
-[Glucometer Preliminary Design Presentation.pdf](https://github.com/user-attachments/files/25115353/Glucometer.Preliminary.Design.Presentation.pdf)
+### Opportunities
 
-[SweetSpot GANTT Chart](https://github.com/user-attachments/files/26286270/SweetSpot.GANTT.Chart.-.Gantt.Chart.Template.1.pdf)
+- Rising diabetes prevalence increases urgency for affordable monitoring tools
+- Future optimization could reduce manufacturing cost and improve scalability
+- Advances in embedded electronics and biosensor design offer pathways for refinement
+- Strong potential for educational, screening, and community health applications
+- Academic setting provides access to fabrication and testing resources
 
+### Threats
 
+- Competition from established commercial glucometers with regulatory approval
+- Regulatory barriers for medical sensing devices intended for clinical use
+- Liability concerns associated with inaccurate glucose prediction
+- Possible fundamental incompatibility between commercial strips and non-proprietary instrumentation
 
-**Initial Design Report**
+---
 
-Updates (as of 19 February 2026):
+## Future Work
 
-Familiarized team with IO Rodeostat and created Jupyter notebook that directly captures readings from IO Rodeostat. Computed glucose and NaCl requirements for different blood ranges. Once the connectors arrive, we will begin taking measurements and create our calibration curve. Once this curve is created, we will edit the Jupyter notebook to directly calculate glucose concentrations from the Rodeostat output. 
+### Immediate Focus — Resolve Sensing Limitation
 
-[Initial Design Report.pptx](https://github.com/user-attachments/files/25423979/Initial.Design.Report.pptx)
+- Test alternative voltage protocols that better match the strip's intended operating conditions
+- Explore additional signal features (integrated current, decay curve fitting, multi-point regression)
+- Improve signal processing through smoothing, noise filtering, and baseline correction
+- Investigate strip-specific operating requirements and manufacturer documentation
+- Evaluate whether commercial strips are fundamentally compatible with Rodeostat-based sensing across the relevant concentration range
+- Develop a more robust calibration model with defined operating bounds and uncertainty estimates
 
+### Hardware Progression
 
-Initial Prototype
+- Design and fabricate a physical enclosure to house all components
+- Evaluate form factor and ergonomics for practical use
+- Test battery-powered operation for portability
+- Migrate processing from laptop to onboard microcontroller (Prototype 2)
+- Integrate potentiostat analog front end directly with Arduino or upgraded MCU
 
-Improvements
+### Longer-Term
 
-Final Deliverable
+- Validate the full system against a commercial glucometer reference
+- Evaluate performance across a wider subject population
+- Investigate miniaturization and PCB integration of the analog front end
+- Assess regulatory pathway for any future clinical or community deployment
+
+---
+
+## Final Project Definition
+
+The current system is best described as a:
+
+> **Computer-dependent electrochemical sensing prototype with active hardware integration in progress**
+
+It successfully demonstrates:
+
+- Electrochemical signal acquisition
+- Python-based data processing and calibration analysis
+- Serial communication from Python to Arduino
+- Real-time OLED display of computed glucose concentration
+- Soldered hardware assembly as a step toward a cased portable device
+
+It does not yet demonstrate:
+
+- Reliable quantitative glucose sensing across repeated measurements
+- Validated concentration prediction
+- Standalone operation without a connected laptop
+- Finished physical enclosure
+
+That makes the current project a successful **sensing-platform and display-integration prototype**, advancing toward but not yet achieving a validated standalone glucometer.
+
+---
+
+## Repository Contents
+
+- `notebooks/` — Jupyter Notebooks for chronoamperometry, calibration, and serial communication
+- `data/` — CSV exports of raw current-time data for each glucose standard
+- `arduino/` — Arduino sketch for OLED display and serial communication
+- `docs/` — Preliminary Design Report, Initial Design Report, GANTT chart
+- `README.md` — This file
+
+### Reports and Presentations
+
+- [Glucometer Preliminary Design Presentation](https://github.com/user-attachments/files/25115353/Glucometer.Preliminary.Design.Presentation.pdf)
+- [SweetSpot GANTT Chart](https://github.com/user-attachments/files/26286270/SweetSpot.GANTT.Chart.-.Gantt.Chart.Template.1.pdf)
+- [Initial Design Report](https://github.com/user-attachments/files/25423979/Initial.Design.Report.pptx)

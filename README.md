@@ -557,7 +557,7 @@ Although the system can successfully run chronoamperometry, process the signal, 
 
 ## System Architecture
 
-INSERT LAUREN'S DRAWING HERE
+<img width="1137" height="653" alt="Screenshot 2026-04-08 at 5 31 58 PM" src="https://github.com/user-attachments/assets/cff04c35-f222-4edc-b9f9-14935a0425f3" />
 
 
 ---

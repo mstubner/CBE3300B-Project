@@ -523,9 +523,15 @@ This week marked a significant step toward a more robust and portable device. Th
 
 ---
 
+
+
+
+
 ## Current Project Status
 
 The system presently functions as a **computer-dependent electrochemical sensing prototype with active hardware integration in progress**.
+
+https://github.com/user-attachments/assets/cb9e7f55-9fd3-4ae5-9c2e-26083d2b7484
 
 ### What is working
 

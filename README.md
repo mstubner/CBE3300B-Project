@@ -23,6 +23,9 @@ The long-term goal is to develop a low-cost and accessible glucometer that can m
   - [March 5 — Initial Calibration Curve](#march-5-2026--initial-calibration-curve)
   - [March 25 — Validation Testing and Failure Analysis](#march-25-2026--validation-testing-and-failure-analysis)
   - [April 2 — Arduino Serial Communication and OLED Display](#april-2-2026--arduino-serial-communication-and-oled-display)
+    - [Arduino IDE Setup](#arduino-ide-setup)
+    - [Arduino Sketch](#arduino-sketch)
+    - [Python Notebook Script](#python-notebook-script)
   - [April 8 — Hardware Integration and Soldering](#april-8-2026--hardware-integration-and-soldering)
 - [Current Project Status](#current-project-status)
 - [System Architecture](#system-architecture)
@@ -148,16 +151,6 @@ We prepared a full set of standard glucose solutions for calibration and improve
 
 At this stage, we collected our first full datasets for high and very high glucose concentrations, beginning the transition from simple system verification to quantitative sensor characterization.
 
-The electrode configuration used during testing:
-
-| Electrode | Color |
-|-----------|-------|
-| Working   | Gray  |
-| Reference | White |
-| Counter   | Black |
-
-Maintaining a consistent electrode configuration was essential because any reversal or inconsistency in connections would alter the measured response and compromise the validity of calibration data.
-
 ---
 
 ### March 4, 2026 — Full Concentration Dataset Complete
@@ -210,7 +203,7 @@ Although calibration curves could be generated for both methods, neither produce
 The fact that both methods failed suggests the system is not behaving according to the idealized diffusion-controlled Cottrell model. Several possible explanations are being considered:
 
 **1. Strip–Instrumentation Mismatch**
-Commercial glucose test strips are designed to operate with proprietary voltage waveforms, timing windows, and internal electronics. The simple chronoamperometric step applied by the Rodeostat may not match the strip's intended operating conditions.
+Commercial glucose test strips are designed to operate with proprietary voltage waveforms, timing windows, and internal electronics. The simple chronoamperometric step applied by the Rodeostat may not match the strip's intended operating conditions. We assumed that this failure was contributing most to the unreliable readings. To rectify this, we retook all of our data samples. To better understand the strips, for each strip we first took a distilled water reading on them. Then, we wiped off the strip and took 2 readings of whatever sample we were recording data on.
 
 **2. Mass Transport Limitations**
 The Cottrell equation assumes a well-defined diffusion layer and predictable transport behavior. If glucose transport to the electrode surface is inconsistent or influenced by convection, geometry, or strip structure, current will vary independently of concentration.
@@ -231,7 +224,11 @@ We physically inspected the Rodeostat, confirmed the device setup, and checked a
 
 ### April 2, 2026 — Arduino Serial Communication and OLED Display
 
-Building on the validated acquisition pipeline, we implemented the communication link between Python and the Arduino Uno, and successfully drove the 128×64 OLED display with computed glucose values.
+We focused on verifying that the OLED screen would work with our Arduino and began with a prototyping breadboard. After quite a few bumps, we realized we had to switch the OLED screen from I2C to SPI. Once we did this, the screen was quick to work and we validated the connection between our Arduino and the screen.
+
+Below is the initial wiring set up.
+
+<img width="698" height="402" alt="Screenshot 2026-04-08 at 5 02 33 PM" src="https://github.com/user-attachments/assets/7b3861d4-89a2-44fa-8873-8d93ec5980c7" />
 
 #### OLED Wiring (SPI Interface)
 
@@ -245,9 +242,9 @@ The OLED display was wired to the Arduino Uno using the SPI protocol, following 
 | MOSI (Data) | D11 |
 | SCK (Clock) | D13 |
 
-![Arduino OLED Wiring Diagram](https://github.com/user-attachments/assets/Screenshot_2026-04-08_at_4_51_39_PM.png)
-
 **Reference:** [The Beginner's Guide to Display Text, Image & Animation on OLED Display by Arduino](https://www.instructables.com/The-Beginners-Guide-to-Display-Text-Image-Animatio/) was used to guide the initial OLED setup and text rendering.
+
+Working Screen:
 
 #### Serial Communication Workflow
 
@@ -265,6 +262,248 @@ The Arduino sketch was written to:
 3. Display the glucose concentration on the OLED in real time
 
 This completed the full sensing-to-display pipeline within the computer-dependent prototype architecture.
+
+#### Arduino IDE Setup
+
+The Arduino sketch depends on two libraries that must be installed via the Arduino IDE Library Manager before uploading:
+
+- **Adafruit SSD1306** — OLED display driver
+- **Adafruit GFX** — graphics primitives (dependency of SSD1306)
+
+To install: open Arduino IDE → Sketch → Include Library → Manage Libraries → search for each library by name → Install.
+
+The sketch was uploaded to the Arduino Uno over USB before running the Python notebook. Once uploaded, the Arduino listens on Serial at 115200 baud and waits for a newline-terminated concentration string from Python.
+
+#### Arduino Sketch
+
+```cpp
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_DC  8
+#define OLED_CS  10
+#define OLED_RST 9
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &SPI, OLED_DC, OLED_RST, OLED_CS);
+
+String incoming = "";
+
+void showValue(String value) {
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+
+  // Header label
+  display.setTextSize(1);
+  display.setCursor(18, 6);
+  display.print("GLUCOSE");
+
+  // Divider line
+  display.drawLine(0, 18, 127, 18, SSD1306_WHITE);
+
+  // Large concentration value
+  display.setTextSize(3);
+  display.setCursor(10, 30);
+  display.print(value);
+
+  // Units
+  display.setTextSize(1);
+  display.setCursor(92, 52);
+  display.print("mg/dL");
+
+  display.display();
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(2000);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC)) {
+    while (1) {}  // halt if display not found
+  }
+
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setTextSize(1);
+  display.setCursor(10, 25);
+  display.print("Waiting for value...");
+  display.display();
+
+  Serial.println("OLED_READY");
+}
+
+void loop() {
+  while (Serial.available() > 0) {
+    char c = Serial.read();
+    if (c == '\n') {
+      incoming.trim();
+      if (incoming.length() > 0) {
+        showValue(incoming);
+        Serial.print("DISPLAYED: ");
+        Serial.println(incoming);
+      }
+      incoming = "";
+    } else {
+      incoming += c;
+    }
+  }
+}
+```
+
+#### Python Notebook Script
+
+The following script runs the full pipeline end-to-end: connecting to both the Rodeostat and the OLED, running the chronoamperometry measurement, extracting the peak current, computing concentration via the calibration equation, and sending the result to the OLED over serial.
+
+> **Note:** Update `rodeostat_port` and `oled_port` to match the actual port names shown when you run the port-listing block. On macOS these look like `/dev/cu.usbmodemXXXX`; on Windows they look like `COM3`.
+
+```python
+from potentiostat import Potentiostat
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import serial
+import serial.tools.list_ports
+import time
+
+# -----------------------------
+# 0) SHOW AVAILABLE PORTS
+# -----------------------------
+print("Available ports:")
+for p in serial.tools.list_ports.comports():
+    print(" ", p.device, "-", p.description)
+
+# -----------------------------
+# 1) SET PORT NAMES
+# -----------------------------
+# Update these to match your system (run block 0 first to find them)
+rodeostat_port = "/dev/cu.usbmodem101"
+oled_port      = "/dev/cu.usbmodem11101"
+
+# -----------------------------
+# 2) CONNECT TO OLED (Arduino)
+# -----------------------------
+oled = serial.Serial(oled_port, 115200, timeout=1)
+time.sleep(2.5)
+oled.reset_input_buffer()
+oled.reset_output_buffer()
+print("OLED connected on", oled_port)
+
+# -----------------------------
+# 3) CONNECT TO RODEOSTAT
+# -----------------------------
+dev = Potentiostat(rodeostat_port)
+# Note: set_curr_range is skipped because the installed library version
+# raises KeyError: '10V_microAmpV0.2' for that call.
+# dev.set_curr_range("100uA")
+dev.set_sample_period(100)  # ms
+
+datafile = "data.txt"
+
+# -----------------------------
+# 4) RUN CHRONOAMPEROMETRY
+# -----------------------------
+name = "chronoamp"
+test_param = {
+    "quietValue": 0.0,
+    "quietTime":  1000,
+    "step": [
+        (0,     0.0),
+        (29000, 0.5),
+    ],
+}
+
+dev.set_param(name, test_param)
+print("Running test...")
+t, volt, curr = dev.run_test(name, display="pbar", filename=datafile)
+
+# -----------------------------
+# 5) BUILD DATAFRAME
+# -----------------------------
+df_raw = pd.DataFrame({
+    "time_s":     t,
+    "voltage_V":  volt,
+    "current_uA": curr
+})
+df_raw = df_raw.sort_values("time_s").reset_index(drop=True)
+df_raw["time_s"] = df_raw["time_s"].round(2)
+
+# -----------------------------
+# 6) SAVE DATA
+# -----------------------------
+out_file = "chrono_data.xlsx"
+df_raw.to_excel(out_file, index=False)
+print("Saved:", out_file)
+
+# -----------------------------
+# 7) PLOT
+# -----------------------------
+plt.figure(figsize=(9, 6))
+
+plt.subplot(211)
+plt.title("Voltage and current vs time")
+plt.plot(t, volt)
+plt.ylabel("potential (V)")
+plt.grid(True)
+
+plt.subplot(212)
+plt.plot(t, curr)
+plt.ylabel("current (uA)")
+plt.xlabel("time (sec)")
+plt.grid(True)
+
+plt.tight_layout()
+plt.show()
+
+# -----------------------------
+# 8) EXTRACT MAX CURRENT
+# -----------------------------
+# Ignore first 1.0 s to reduce startup noise
+df_window = df_raw[df_raw["time_s"] >= 1.0]
+
+# Use max for an upward peak response
+max_current_uA = float(df_window["current_uA"].max())
+# If signal is a downward dip, use .min() instead:
+# max_current_uA = float(df_window["current_uA"].min())
+
+print("Max current (uA):", max_current_uA)
+
+# -----------------------------
+# 9) COMPUTE CONCENTRATION
+# -----------------------------
+# Calibration: current = m * concentration + b
+# → concentration = (current - b) / m
+# Replace CAL_SLOPE and CAL_INTERCEPT with your experimentally derived values.
+CAL_SLOPE     = 1.0   # replace with your m
+CAL_INTERCEPT = 0.0   # replace with your b
+
+concentration = (max_current_uA - CAL_INTERCEPT) / CAL_SLOPE
+concentration = max(0, concentration)  # clamp to non-negative
+print("Concentration:", concentration)
+
+# -----------------------------
+# 10) SEND TO OLED
+# -----------------------------
+oled.write(f"{concentration:.1f}\n".encode())
+time.sleep(0.3)
+
+while oled.in_waiting:
+    print("OLED:", oled.readline().decode(errors="ignore").strip())
+
+# -----------------------------
+# 11) CLEANUP
+# -----------------------------
+oled.close()
+
+# -----------------------------
+# 12) DEBUG PRINTS
+# -----------------------------
+print("t[:10]    =", t[:10])
+print("volt[:10] =", volt[:10])
+print("curr[:10] =", curr[:10])
+print(df_raw.head(10))
+```
 
 ---
 

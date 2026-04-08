@@ -9,6 +9,7 @@ SweetSpot is a computer-dependent electrochemical glucose sensing prototype desi
 
 The long-term goal is to develop a low-cost and accessible glucometer that can measure glucose concentration, process the signal, and display the result in real time on an embedded screen. The project is being developed in stages, beginning with a laptop-based prototype for sensing validation and progressing toward a fully standalone embedded device.
 
+
 ---
 
 - [About](#about)

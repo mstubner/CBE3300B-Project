@@ -356,7 +356,6 @@ void loop() {
 
 The following script runs the full pipeline end-to-end: connecting to both the Rodeostat and the OLED, running the chronoamperometry measurement, extracting the peak current, computing concentration via the calibration equation, and sending the result to the OLED over serial.
 
-> **Note:** Update `rodeostat_port` and `oled_port` to match the actual port names shown when you run the port-listing block. On macOS these look like `/dev/cu.usbmodemXXXX`; on Windows they look like `COM3`.
 
 ```python
 from potentiostat import Potentiostat

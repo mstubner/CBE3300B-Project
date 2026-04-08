@@ -246,6 +246,9 @@ The OLED display was wired to the Arduino Uno using the SPI protocol, following 
 
 Working Screen:
 
+<img width="565" height="649" alt="Screenshot 2026-04-08 at 5 22 39 PM" src="https://github.com/user-attachments/assets/55357784-2a30-4411-ad7d-7bf7101c4b1a" />
+
+
 #### Serial Communication Workflow
 
 The Python Jupyter Notebook workflow was extended to:

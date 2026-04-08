@@ -577,11 +577,6 @@ In the first prototype, the laptop serves as the primary control and data-proces
 
 **Current hardware state:** OLED and Arduino connections are soldered onto a breadboard. The system runs end-to-end from a single Jupyter Notebook.
 
-
-
-## Device Component Sketch
-INSERT HERE
-
 ---
 
 ## Path to Minimum Viable Product

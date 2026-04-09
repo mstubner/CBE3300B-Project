@@ -117,7 +117,7 @@ $$C \text{ (mM)} = \frac{\text{mass (g)}}{180.156 \text{ g/mol} \times 0.025 \te
 
 These standards span the clinically relevant glucose range, from normal fasting levels through extreme diabetic concentrations, allowing us to characterize both the linear sensing regime and its breakdown at high concentrations.
 
-### Back-of-the-Envelope Performance Estimate
+### Performance Estimate
 
 Under ideal Cottrell behavior, we can estimate the expected current magnitude for a typical glucose concentration. For a glucose concentration of 5 mM (normal fasting):
 
@@ -132,6 +132,16 @@ This estimate is consistent with the current magnitudes observed experimentally 
 
 Deviations from this ideal — particularly at high concentrations or across repeated runs — point to the non-ideal effects (enzyme saturation, mass transport inconsistencies) discussed in the failure analysis below.
 
+## Calibration Approach and Iteration
+
+### Initial Approach: Peak Current
+Initially, we attempted to construct the calibration curve using the peak current from each measurement, under the assumption that the maximum response would best correlate with concentration. However, this approach showed significant variability between test strips, likely due to differences in strip sensitivity and transient behavior during the measurement.
+
+### Normalization Step
+To address this, we introduced a normalization step by first measuring the peak current in DI water for each strip and subtracting it from the corresponding sample peak current. The goal was to account for strip-to-strip variation and isolate the true signal. Despite this correction, the resulting data still did not produce a consistent or reliable relationship between current and concentration.
+
+### Shift to Steady-State Current
+As a result, we shifted our approach to using steady-state current values at fixed time points, specifically 10 seconds and 20 seconds. These time points were chosen because the current had stabilized, reducing the influence of transient effects and noise. This method produced a much more consistent and linear relationship, making it more suitable for constructing an accurate calibration curve. We decided to use the 10s calibration curve as it produced the clearest linear relationship.
 ---
 
 ## Progress Log

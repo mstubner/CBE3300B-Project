@@ -142,6 +142,9 @@ To address this, we introduced a normalization step by first measuring the peak 
 
 ### Shift to Steady-State Current
 As a result, we shifted our approach to using steady-state current values at fixed time points, specifically 10 seconds and 20 seconds. These time points were chosen because the current had stabilized, reducing the influence of transient effects and noise. This method produced a much more consistent and linear relationship, making it more suitable for constructing an accurate calibration curve. We decided to use the 10s calibration curve as it produced the clearest linear relationship.
+
+<img width="622" height="520" alt="Screenshot 2026-04-09 at 12 33 30 PM" src="https://github.com/user-attachments/assets/23fa1c65-093f-43e6-bedc-88f5650b4043" />
+
 ---
 
 ## Progress Log

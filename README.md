@@ -40,7 +40,7 @@ The device represents a fully functional final prototype: electrochemical sensin
 - [Future Work](#future-work)
 
 ---
-
+ 
 ## About
 
 SweetSpot pairs a commercial True Metrix glucose test strip with an IO Rodeostat potentiostat to measure glucose concentration electrochemically. A Python-based Jupyter Notebook workflow applies a chronoamperometric potential step at an empirically validated voltage (0.3 V, determined via cyclic voltammetry), records the resulting current response, extracts peak current as the calibration feature, and transmits the computed glucose concentration over USB serial to an Arduino Uno. The Arduino displays the result in real time on a 128×64 OLED screen.

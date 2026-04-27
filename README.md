@@ -564,7 +564,8 @@ The Arduino Uno and OLED display were mounted inside a 3D-printed enclosure that
 3. Python processes the current-time response and extracts peak current (ignoring the first 1 s of transient noise)
 4. The calibration equation converts peak current to glucose concentration in mM
 5. Concentration is transmitted over USB serial to the Arduino
-6. The OLED displays the result in real time
+6. Program reruns if inhuman result (negative glucose concentration)
+7. The OLED displays the result in real time
 
 ### Calibration Summary
 
@@ -669,14 +670,8 @@ The design goal is not a premium consumer medical device, but a proof-of-concept
 
 ---
 
-## Future Work
+## Future Work for Future Semester Groups
 
-### Immediate
-
-- Triplicate calibration measurements to quantify uncertainty, calculate confidence intervals, and define device error specifications
-- Implement Cottrell $t^{-1/2}$ linearity check as an automated per-measurement quality flag
-- Implement automated re-run logic: trigger repeat if computed concentration is below 0 or above calibrated range
-- Log all screen-output vs. actual-concentration comparisons to build a validation dataset
 
 ### Hardware
 

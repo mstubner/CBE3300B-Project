@@ -456,8 +456,9 @@ oled.close()
 
 The system moved from loose jumper wire connections to a soldered assembly. The OLED screen and all wiring connections to the Arduino were soldered onto a breadboard, replacing the earlier prototype with mechanically stable joints. The full pipeline (measure → process → display) was verified end-to-end from a single Jupyter Notebook.
 
-> **📷 [INSERT PHOTO: The breadboard with soldered OLED connections from April 8.]**
-> *Caption: "Soldered OLED and Arduino connections on breadboard, April 8. Soldering replaced loose jumper wires, improving mechanical stability and reducing contact variability at the display interface."*
+<img width="541" height="603" alt="Screenshot 2026-04-27 at 4 46 22 PM" src="https://github.com/user-attachments/assets/a5612769-33c9-49d7-9f39-8220c60cb2b9" />
+
+
 
 ---
 

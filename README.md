@@ -72,7 +72,7 @@ The development plan proceeded in two major stages:
 
 A glucometer is a portable medical device used to measure blood glucose concentration. It is essential for diabetes monitoring and management, particularly for individuals who need frequent readings to guide daily decisions about diet, medication, and activity.
 
-As diabetes prevalence continues to rise, the need for affordable and accessible glucose monitoring tools becomes more urgent. This challenge is acute in underserved urban communities, where access to routine testing and early diagnosis may be limited.
+Since 1990, global cases of diabetes have quadrupled to 830 million, disproportionately affecting low- and middle-income countries. The CDC predicts that if these trends continue, 40% of Americans will develop diabetes in their lifetime. Additionally, diabetes is the most expensive chronic condition in the United States (NIH). People diagnosed with diabetes have medical expenses approximately 2.6 times higher than those without the condition (CDC).
 
 In Philadelphia specifically, diabetes prevalence has increased by more than 50% over the past 15 years. Nearly one in three individuals living with diabetes in the city are unaware of their condition. In 2017, diabetes was the sixth leading cause of death in Philadelphia, accounting for 374 deaths. SweetSpot is motivated by the idea that a lower-cost electrochemical sensing platform could eventually support broader glucose awareness and improve access to screening.
 
@@ -90,7 +90,7 @@ The H₂O₂ produced is electroactive. When a constant potential is applied by 
 
 ### Chronoamperometry and the Cottrell Equation
 
-This project uses **chronoamperometry**: the potential is stepped to a fixed value and the current is measured over time. Under ideal diffusion-controlled conditions, the time-dependent response follows the **Cottrell equation**:
+This project uses chronoamperometry, meaning the potential is stepped to a fixed value and the current is measured over time. Under ideal diffusion-controlled conditions, the time-dependent response follows the Cottrell equation which is shown below:
 
 $$i(t) = \frac{nFAC\sqrt{D}}{\sqrt{\pi t}}$$
 
@@ -104,31 +104,30 @@ Where:
 
 This relationship predicts that current is proportional to analyte concentration at any fixed time point, providing the physical justification for using peak or steady-state current as a calibration feature.
 
-Proof of the t^-1/2 relationship during our tests is shown below.
+Proof of the t^-1/2 relationship through our tests is shown below.
 
-<img width="418" height="352" alt="Screenshot 2026-04-27 at 2 54 00 PM" src="https://github.com/user-attachments/assets/76fb609b-c87f-40a4-b7ed-2942f8c95f13" />
+<img width="418" height="352" alt="Screenshot 2026-04-27 at 2 54 00 PM" src="https://github.com/user-attachments/assets/76fb609b-c87f-40a4-b7ed-2942f8c95f13" />
 
 
 ### Cyclic Voltammetry for Operating Point Selection
 
-**Cyclic voltammetry (CV)** is an electroanalytical technique in which the working electrode potential is swept linearly between two set values while the resulting current is recorded. The output — a cyclic voltammogram — traces the full electrochemical response of the system as a function of applied potential, revealing characteristic oxidation and reduction peaks for the electroactive species present.
+**Cyclic voltammetry (CV)** is an electroanalytical technique in which the working electrode potential is swept linearly between two set values while the resulting current is recorded. The output traces the full electrochemical response of the system as a function of applied potential, revealing characteristic oxidation and reduction peaks for the electroactive species present.
 
-In SweetSpot, CV was used as a diagnostic and optimization tool to identify the optimal applied potential for chronoamperometric measurements. The anodic (positive) peak in the CV scan corresponds to the electrochemical oxidation of H₂O₂ at the working electrode surface — the same faradaic reaction that generates the sensing signal in chronoamperometry. The potential at which this peak occurs indicates where the oxidation rate is maximized for the given strip chemistry.
+In SweetSpot, CV was used as a diagnostic and optimization tool to identify the optimal applied potential for chronoamperometric measurements. The anodic (positive) peak in the CV scan corresponds to the electrochemical oxidation of H₂O₂ at the working electrode surface which is the same faradaic reaction that generates the sensing signal in chronoamperometry. The potential at which this peak occurs indicates where the oxidation rate is maximized.
 
-The image below shows the CV reading 0.3V which we used for the basis of this project. 
-<img width="598" height="444" alt="Screenshot 2026-04-27 at 2 52 24 PM" src="https://github.com/user-attachments/assets/83df46b3-026a-41f9-9a17-4e6163ba23e7" />
+**Connection to chemical engineering principles:** A CV experiment directly maps reaction rate (current) as a function of electrochemical driving force (applied potential) making it an electrochemical analog of a rate-versus-driving-force characterization in transport phenomena and reactor design. The resulting current-potential curve is the polarization curve of the electrode system, and it encodes the interplay between two physical regimes that chemical engineers deal with routinely:
 
-**Connection to chemical engineering principles:** A CV experiment directly maps reaction rate (current) as a function of electrochemical driving force (applied potential) — an electrochemical analog of a rate-versus-driving-force characterization in transport phenomena and reactor design. The resulting current-potential curve is the polarization curve of the electrode system, and it encodes the interplay between two physical regimes that chemical engineers deal with routinely:
+- **Activation-controlled regime (low potential):** Below the oxidation peak, the driving force is insufficient to efficiently oxidize H₂O₂ at the electrode surface. The reaction rate is limited by the activation energy barrier which is directly analogous to a kinetically controlled reactor operating far from equilibrium conversion. Current is low and poorly correlated with analyte concentration.
 
-- **Activation-controlled regime (low potential):** Below the oxidation peak, the driving force is insufficient to efficiently oxidize H₂O₂ at the electrode surface. The reaction rate is limited by the activation energy barrier — directly analogous to a kinetically controlled reactor operating far from equilibrium conversion. Current is low and poorly correlated with analyte concentration.
+- **Mass-transport-limited regime (high potential):** Above the peak, the electrode reaction proceeds as fast as H₂O₂ can arrive at the surface. The rate is now controlled by diffusion through the solution, identical to a transport-limited reactor where the reaction is fast but feed delivery is the rate limiting step. Competing reactions (e.g., water electrolysis) also begin to contribute at sufficiently high potentials, introducing background current that degrades selectivity.
 
-- **Mass-transport-limited regime (high potential):** Above the peak, the electrode reaction proceeds as fast as H₂O₂ can arrive at the surface. The rate is now controlled by diffusion through the solution — identical to a transport-limited reactor where the reaction is fast but feed delivery is the bottleneck. Competing reactions (e.g., water electrolysis) also begin to contribute at sufficiently high potentials, introducing background current that degrades selectivity.
-
-The oxidation peak in the CV scan marks the transition between these two regimes — the point where the electrode reaction is most sensitive to analyte concentration and most efficient in converting faradaic current to a usable signal. Choosing the applied potential at this peak is therefore equivalent to selecting the optimal operating point on a reaction rate curve: maximizing conversion per unit driving force while avoiding the side-reaction and transport-limitation regimes on either side.
-
-This is the same logic applied when selecting reactor operating temperature (maximize rate without triggering competing reactions or exceeding heat transfer limits), or when selecting a distillation reflux ratio (maximize separation without excessive energy cost). In each case, the engineering task is to identify and operate at the sweet spot on a rate-versus-driving-force relationship — here, the current-versus-potential curve.
+The oxidation peak in the CV scan marks the transition between these two regimes, the point where the electrode reaction is most sensitive to analyte concentration and most efficient in converting faradaic current to a usable signal. Choosing the applied potential at this peak is therefore equivalent to selecting the optimal operating point on a reaction rate curve: maximizing conversion per unit driving force while avoiding the side-reaction and transport-limitation regimes on either side.
 
 CV scans were run across all five glucose standards. The anodic oxidation peak appeared consistently near **0.3 V** across all concentrations, confirming that this potential reflects a property of the strip electrode chemistry rather than analyte concentration. 0.3 V was adopted as the fixed applied potential for all subsequent chronoamperometric measurements, replacing the previously arbitrary 0.5 V value.
+
+The image below shows the CV reading 0.3V which we used for the basis of this project.
+<img width="598" height="444" alt="Screenshot 2026-04-27 at 2 52 24 PM" src="https://github.com/user-attachments/assets/83df46b3-026a-41f9-9a17-4e6163ba23e7" />
+
 
 ### Chemical Engineering Principles in Device Design
 
@@ -136,9 +135,9 @@ CV scans were run across all five glucose standards. The anodic oxidation peak a
 
 **Transport phenomena:** The Cottrell equation arises from solving Fick's second law of diffusion for a semi-infinite planar electrode with a potential-step boundary condition. Current decay over time reflects depletion of the diffusion layer — a mass transport effect that governs the signal shape and informs both feature extraction strategy and the choice of measurement time window.
 
-**Reaction kinetics and operating windows:** CV characterization identified the activation-controlled regime (below ~0.2 V) versus the mass-transport-limited plateau (above ~0.35 V) for this strip system. Choosing 0.3 V places the operating point at the transition — where signal is maximized before transport limitations reduce sensitivity.
+**Reaction kinetics and operating windows:** CV characterization identified the activation-controlled regime (below ~0.2 V) versus the mass-transport-limited plateau (above ~0.35 V) for this strip system. Choosing 0.3 V places the operating point at the transition where signal is maximized before transport limitations reduce sensitivity.
 
-**Calibration as process modeling:** The experimentally derived calibration curve functions as a process model: it maps a measured variable (peak current) to a process output (glucose concentration). Constructing, validating, and refining this model — including identifying its failure modes at high concentrations — is directly analogous to process identification and control loop tuning.
+**Calibration as process modeling:** The experimentally derived calibration curve functions as a process model: it maps a measured variable (peak current) to a process output (glucose concentration). Constructing, validating, and refining this model, including identifying its failure modes at high concentrations, is directly analogous to process identification and control loop tuning.
 
 **Nonlinear kinetics and operating range:** The breakdown of linearity at high glucose concentrations reflects enzyme saturation — a Michaelis-Menten kinetic effect where the GOx reaction rate approaches $V_{\max}$ and no longer scales proportionally with substrate concentration. This is identical to the behavior of a first-order reaction transitioning to zero-order kinetics at high substrate concentration, a concept central to reactor design. The device's validated operating range (2.2–11.1 mM) is bounded by this nonlinearity on the high end.
 
@@ -180,7 +179,9 @@ Experimentally observed peak currents with the final protocol are in the low-to-
 
 ### Initial Approach: Peak Current (March 5)
 
-The first calibration curve used peak (maximum) current as the feature. This produced an apparently excellent fit on the initial dataset (R² = 0.9998) but failed validation — predictions on new strips were unreliable and non-monotonic. With only four concentrations and one measurement each, the model was interpolated rather than fit, and captured no inter-strip variability.
+The first calibration curve used peak (maximum) current as the feature. This produced an apparently excellent fit on the initial dataset (R² = 0.9998) but drastically failed validation. When using this derived equation to predict glucose concentrations, it would give results ranging from -10 to over 50. With only four concentrations and one measurement each, the model was interpolated rather than fit, and captured no inter-strip variability.
+
+More readings were conducted with the same method, resulting in the following results:
 
 ### Normalization Attempt
 
@@ -198,7 +199,27 @@ Persistent reproducibility failures across all signal features pointed to two un
 
 ### Final Calibration (April 26)
 
+New strips were bought and the electrodes were rewired. Initially, we conducted readings the same way as with the old strips by inserting one in and lining it up. Through this method, the following results were produced.
+
+After talking with Professor Osuji, we determined that a key issue may be unreliable mechanical contact. In order to resolve this issue, a shim was added (another strip upside down to ensure the electrodes do not interfere) to ensure proper contact. While this did not completely resolve the issue, more reliable results were obtained, shown below.
+
 $$\text{Glucose Concentration (mM)} = \frac{\text{Peak Current (µA)} + 5.415}{3.7379} \quad (R^2 = 0.935)$$
+
+Then, to fully test our calibration curve, we tested our curve with our concentrations to create specs for our device. The results of two rounds of tests are shown below.
+
+| Actual Concentration (mM) | Screen Output (mM) |
+|---------------------------|-------------------|
+| 2.2 | 11.7 |
+| 4.4 | 3.42 |
+| 6.6 | 7.9 |
+| 8.8 | 42.5 |
+| 11.1 | 48.8 |
+
+---
+
+## Error Analysis
+
+The final prototype calibration curve was evaluated by testing known glucose standards and comparing the predicted concentrations generated by the device to their true prepared values. This validation step was used to assess real-world prototype performance rather than develop the model itself. The resulting mean absolute error (MAE) was 20.27 mM, with a root mean squared error (RMSE) of 23.57 mM and a mean absolute percent error (MAPE) of 328.7%. The system also showed an average positive bias of 19.68 mM, meaning the final curve generally overpredicted glucose concentration. Error was especially pronounced at intermediate and higher concentrations, indicating that while the calibration relationship captured an overall trend, measurement variability still dominated final accuracy. Likely contributors include inconsistent strip seating, contact resistance between the strip and electrodes, manufacturing variation between commercial strips, electrical noise, and nonlinear enzymatic response at elevated glucose levels. Despite these limitations, the final calibration represented the most functional and complete version of the device, enabling fully automated concentration prediction and real-time OLED display output. Most importantly, the validation data clearly identified the next engineering priorities: improved strip alignment, tighter mechanical tolerances, larger replicate calibration datasets, and more robust regression methods. As a capstone prototype, the project successfully demonstrated an end-to-end electrochemical glucometer system while using quantitative error analysis to guide future refinement.
 
 ---
 
@@ -210,7 +231,7 @@ We connected the IO Rodeostat potentiostat to a laptop and conducted an initial 
 
 A Python script in a Jupyter Notebook was developed to interface with the Rodeostat, collect current-versus-time data, and visualize the results.
 
-<img width="788" height="483" alt="Screenshot 2026-04-27 at 2 54 56 PM" src="https://github.com/user-attachments/assets/e5ac448c-d1ea-4db9-8321-44241245651d" />
+<img width="788" height="483" alt="Screenshot 2026-04-27 at 2 54 56 PM" src="https://github.com/user-attachments/assets/e5ac448c-d1ea-4db9-8321-44241245651d" />
 
 > *Caption: "First chronoamperometry run, February 12. Signal is present but highly noisy with no discernible concentration-dependent feature. This run confirmed hardware connectivity but highlighted the measurement challenges ahead."*
 
@@ -236,7 +257,7 @@ Using the concentration dataset, the first calibration model was constructed:
 
 $$\text{Glucose Concentration (mM)} = 1.1978 \times (\text{Max Current in µA}) - 0.4567 \quad (R^2 = 0.9998)$$
 
-<img width="985" height="459" alt="Screenshot 2026-04-27 at 2 55 57 PM" src="https://github.com/user-attachments/assets/2cb0e151-1bb0-470f-8fdb-c8190bdcf42f" />
+<img width="985" height="459" alt="Screenshot 2026-04-27 at 2 55 57 PM" src="https://github.com/user-attachments/assets/2cb0e151-1bb0-470f-8fdb-c8190bdcf42f" />
 
 > *Caption: "Initial calibration curve, March 5. R² = 0.9998 on training data, but failed to generalize to new measurements — a consequence of fitting four points with zero within-concentration replication."*
 
@@ -278,12 +299,8 @@ Although calibration curves could be constructed for both methods, neither produ
 
 After identifying that the display required SPI (not I2C) communication, the OLED was successfully initialized and validated on a prototyping breadboard.
 
-
 > *Caption: "Initial OLED wiring setup on breadboard, April 2. SPI connection established after switching from I2C."*
-> <img width="867" height="507" alt="Screenshot 2026-04-27 at 2 57 23 PM" src="https://github.com/user-attachments/assets/12587aa6-de29-4984-a667-b7863b4036df" />
-
-
-
+> <img width="867" height="507" alt="Screenshot 2026-04-27 at 2 57 23 PM" src="https://github.com/user-attachments/assets/12587aa6-de29-4984-a667-b7863b4036df" />
 
 #### OLED Wiring (SPI Interface)
 
@@ -456,9 +473,7 @@ oled.close()
 
 The system moved from loose jumper wire connections to a soldered assembly. The OLED screen and all wiring connections to the Arduino were soldered onto a breadboard, replacing the earlier prototype with mechanically stable joints. The full pipeline (measure → process → display) was verified end-to-end from a single Jupyter Notebook.
 
-<img width="541" height="603" alt="Screenshot 2026-04-27 at 4 46 22 PM" src="https://github.com/user-attachments/assets/a5612769-33c9-49d7-9f39-8220c60cb2b9" />
-
-
+<img width="541" height="603" alt="Screenshot 2026-04-27 at 4 46 22 PM" src="https://github.com/user-attachments/assets/a5612769-33c9-49d7-9f39-8220c60cb2b9" />
 
 ---
 
@@ -470,22 +485,19 @@ Following the March 25 failure analysis, a systematic hardware intervention was 
 
 Fresh True Metrix self-monitoring glucose test strips were procured from CVS. The new strips showed noticeably more consistent signal behavior compared to the original batch. Where the earlier strips produced erratic baselines and poorly reproducible peak magnitudes, the new strips yielded cleaner current-versus-time transients with more predictable Cottrell-like decay profiles.
 
-
-
-
 #### Shim Addition and Contact Improvement
 
 A physical shim was inserted underneath each test strip during measurement to apply consistent downward pressure on the strip, standardizing the contact resistance between the Rodeostat leads and the strip electrodes. This mechanical improvement addressed a major source of measurement variability that had persisted across all earlier calibration attempts.
 
 Prior to the shim, strips without controlled contact pressure produced signals ranging from completely open-circuit (flat current) to severely distorted, making it impossible to distinguish contact failures from genuine concentration-dependent signals.
 
-<img width="484" height="374" alt="Screenshot 2026-04-27 at 2 58 46 PM" src="https://github.com/user-attachments/assets/ec0b6f7d-2018-4d26-8643-ef776563f1a3" />
+<img width="484" height="374" alt="Screenshot 2026-04-27 at 2 58 46 PM" src="https://github.com/user-attachments/assets/ec0b6f7d-2018-4d26-8643-ef776563f1a3" />
 
 > *Caption: "Failed chronoamperometry measurements from poor strip contact (2.2 mM, no shim). Flat or distorted traces indicate intermittent electrode connection rather than a genuine electrochemical response — indistinguishable from a zero-concentration sample."*
 
-<img width="390" height="296" alt="Screenshot 2026-04-27 at 2 59 58 PM" src="https://github.com/user-attachments/assets/8dbd1244-d30f-4f7c-bac8-d3d408b8e303" />
+<img width="390" height="296" alt="Screenshot 2026-04-27 at 2 59 58 PM" src="https://github.com/user-attachments/assets/8dbd1244-d30f-4f7c-bac8-d3d408b8e303" />
 
-<img width="406" height="307" alt="Screenshot 2026-04-27 at 3 00 16 PM" src="https://github.com/user-attachments/assets/94fbfa67-454d-4b06-bd62-4ede3ca5331e" />
+<img width="406" height="307" alt="Screenshot 2026-04-27 at 3 00 16 PM" src="https://github.com/user-attachments/assets/94fbfa67-454d-4b06-bd62-4ede3ca5331e" />
 
 > *Caption: "Chronoamperometry with shim added (6.6 mM). At first, we received a crazy result of 1000 microamps. After repositioning, began to see more reliable results"*
 
@@ -551,7 +563,6 @@ These results confirm the full sensing-to-display pipeline is functional end-to-
 #### 3D-Printed Enclosure
 
 The Arduino Uno and OLED display were mounted inside a 3D-printed enclosure that houses the components securely while providing access for the strip holder and USB connection.
-
 
 ---
 
@@ -672,7 +683,6 @@ The design goal is not a premium consumer medical device, but a proof-of-concept
 
 ## Future Work for Future Semester Groups
 
-
 ### Hardware
 
 - Migrate signal processing to onboard microcontroller (eliminate laptop dependency)
@@ -685,6 +695,12 @@ The design goal is not a premium consumer medical device, but a proof-of-concept
 - Validate the full system against a commercial glucometer reference on matched samples
 - Investigate miniaturization and PCB integration of the analog front end
 - Assess regulatory pathway for any future clinical or community deployment
+
+---
+
+## All Calibration Data
+
+Below is all of our calibration data taken over the semester!
 
 ---
 

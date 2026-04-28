@@ -568,9 +568,9 @@ The R² of 0.935 is substantially lower than the original four-point training fi
 
 #### End-to-End Screen Validation
 
-| Actual Concentration (mM) | Screen Output (mM) |
-|---------------------------|-------------------|
-| 2.2 | 11.7 |  2.7 |
+| Actual Concentration (mM) | Screen Output Trial 1 (mM) | Screen Output Trial 2 (mM) |
+|---:|---:|---:|
+| 2.2 | 11.7 | 2.7 |
 | 4.4 | 3.42 | 14.5 |
 | 6.6 | 7.9 | 33.2 |
 | 8.8 | 42.5 | 47.9 |

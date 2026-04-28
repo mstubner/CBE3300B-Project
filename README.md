@@ -570,11 +570,11 @@ The R² of 0.935 is substantially lower than the original four-point training fi
 
 | Actual Concentration (mM) | Screen Output (mM) |
 |---------------------------|-------------------|
-| 2.2 | 11.7 |
-| 4.4 | 3.42 |
-| 6.6 | 7.9 |
-| 8.8 | 42.5 |
-| 11.1 | 48.8 |
+| 2.2 | 11.7 |  2.7 |
+| 4.4 | 3.42 | 14.5 |
+| 6.6 | 7.9 | 33.2 |
+| 8.8 | 42.5 | 47.9 |
+| 11.1 | 48.8 | 35.0 |
 
 These results confirm the full sensing-to-display pipeline is functional end-to-end. Quantitative accuracy remains limited by single-strip calibration — the primary target for further refinement. The pipeline itself (acquire → process → transmit → display) operates correctly for every measurement.
 

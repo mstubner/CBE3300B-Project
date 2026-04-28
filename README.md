@@ -614,14 +614,14 @@ The Arduino Uno and OLED display were mounted inside a 3D-printed enclosure that
 | Non-reproducible calibration | Strip batch variability | New CVS-procured True Metrix strips |
 | Signal dropout / flat traces | Inconsistent strip contact pressure | Shim added to strip holder |
 | Non-optimal applied voltage | Arbitrary voltage selection (0.5 V) | CV-guided 0.3 V selection |
-| Noisy electrode connection | Loose lead interface | Electrode connection rework with defined polarity |
+| Noisy electrode connection | Incorrect connections and voltage interference through Soldering | Electrode connection rework  |
 | Calibration nonlinearity at high [C] | GOx enzyme saturation (Michaelis-Menten) | Validated operating range limited to ≤ 11.1 mM |
 
 ---
 
 ## Current Project Status
 
-The system is a **fully functional final prototype**. The sensing, calibration, display, and enclosure are all complete. The device demonstrates the full engineering chain from electrochemical signal to displayed concentration reading and meets the core design objectives established at project inception.
+The system is a **fully functional final prototype (with significant error)**. The sensing, calibration, display, and enclosure are all complete. The device demonstrates the full engineering chain from electrochemical signal to displayed concentration reading and meets the core design objectives established at project inception.
 
 **Copy link to watch it in action:**
 https://github.com/user-attachments/assets/cb9e7f55-9fd3-4ae5-9c2e-26083d2b7484

@@ -246,12 +246,12 @@ The SweetSpot system operates through a five-stage pipeline:
 
 **Device operation summary:**
 1. User applies a glucose test strip to the shim-assisted strip holder and initiates measurement from the Jupyter Notebook
-2. The Rodeostat applies a 0.3 V chronoamperometric step for 30 seconds
-3. Python processes the current-time response and extracts peak current (ignoring the first 1 s of transient noise)
-4. The calibration equation converts peak current to glucose concentration in mM
-5. If the result is negative, the system automatically re-runs (up to 5×)
-6. Concentration is transmitted over USB serial to the Arduino
-7. The OLED displays the result in real time
+2. The Rodeostat applies a 0.3 V chronoamperometric step for 29 seconds (1 s equilibration at 0 V, then 29 s at 0.3 V)
+3. Python extracts peak current by absolute magnitude across the full time series
+4. The calibration equation (C = (I − CAL_INTERCEPT) / CAL_SLOPE) converts peak current to glucose concentration in mM
+5. If the result is outside 0–50 mM (physiologically implausible), the system automatically re-runs up to 5 times
+6. On a valid result, the concentration is transmitted as a plain string over USB serial to the Arduino
+7. The Arduino sketch — running independently on the board — receives the string and renders it on the OLED in real time; no Arduino IDE is required during operation
 
 ---
 
@@ -436,79 +436,173 @@ void loop() {
 
 #### Python Measurement & Processing Script (Jupyter Notebook)
 
+All measurement, processing, and display communication runs from this single Jupyter Notebook script. The script connects to both USB devices (Rodeostat and Arduino) simultaneously, runs the electrochemical measurement, computes the glucose concentration, and pushes the result to the OLED — without ever opening the Arduino IDE.
+
 ```python
-from potentiostat import Potentiostat
+from potentiostat import Potentiostat   # IO Rodeostat Python library
 import matplotlib.pyplot as plt
 import pandas as pd
-import serial
+import serial                           # pyserial — USB communication with Arduino
 import serial.tools.list_ports
 import time
 
-# 0) SHOW AVAILABLE PORTS — identify Rodeostat vs. OLED serial ports
+# ── SECTION 1: PORT DISCOVERY ────────────────────────────────────────────────
+# Two USB devices are connected simultaneously: the Rodeostat (potentiostat)
+# and the Arduino Uno (OLED controller). They appear as separate serial ports.
+# Print all available ports so the correct port names can be identified.
+# On Mac, ports appear as /dev/cu.usbmodem****; on Windows as COM*.
 print("Available ports:")
 for p in serial.tools.list_ports.comports():
     print(" ", p.device, "-", p.description)
 
-# 1) SET PORT NAMES
-rodeostat_port = "/dev/cu.usbmodem101"   # Rodeostat potentiostat
-oled_port      = "/dev/cu.usbmodem11101" # Arduino (OLED)
+rodeostat_port = "/dev/cu.usbmodem101"    # IO Rodeostat potentiostat
+oled_port      = "/dev/cu.usbmodem11101"  # Arduino Uno (running OLED sketch)
 
-# 2) CONNECT TO OLED
+# ── SECTION 2: CALIBRATION CONSTANTS ────────────────────────────────────────
+# Derived from final calibration dataset (April 26, True Metrix strips, 0.3 V):
+#   I_peak (µA) = CAL_SLOPE × C (mM) + CAL_INTERCEPT    [forward model]
+#   C (mM) = (I_peak - CAL_INTERCEPT) / CAL_SLOPE        [inverted for prediction]
+# R² = 0.892 on the final calibration dataset
+CAL_SLOPE     = 4.065
+CAL_INTERCEPT = -3.897
+
+# ── SECTION 3: MEASUREMENT SETTINGS ─────────────────────────────────────────
+datafile   = "data.txt"        # Raw output file from Rodeostat
+out_01s    = "chrono_data.xlsx"  # Processed DataFrame saved to Excel
+max_retries = 5                # Maximum re-runs if concentration is out of range
+
+# ── SECTION 4: CONNECT TO ARDUINO (OLED) ────────────────────────────────────
+# Opens a serial connection to the Arduino at 115200 baud — the same baud rate
+# set in the Arduino sketch. The Arduino sketch runs continuously on the board
+# (uploaded once via Arduino IDE), listening on its serial port for a number
+# string sent by this Python script. Python talks to it directly over USB;
+# the Arduino IDE does not need to be open.
 oled = serial.Serial(oled_port, 115200, timeout=1)
-time.sleep(2.5)
-oled.reset_input_buffer()
-oled.reset_output_buffer()
+time.sleep(2.5)                # Wait for Arduino to finish booting/resetting
+oled.reset_input_buffer()      # Clear any stale bytes in the receive buffer
+oled.reset_output_buffer()     # Clear any stale bytes in the transmit buffer
 print("OLED connected on", oled_port)
 
-# 3) CONNECT TO RODEOSTAT
+# ── SECTION 5: CONNECT TO RODEOSTAT ─────────────────────────────────────────
+# The Potentiostat class wraps the Rodeostat's USB serial protocol.
+# set_curr_range sets the analog measurement range — "1000uA" means the
+# Rodeostat will measure currents up to 1000 µA with appropriate resolution.
+# set_sample_period(100) sets a 100 ms interval between current measurements,
+# producing ~290 data points over the 29-second chronoamperometry window.
 dev = Potentiostat(rodeostat_port)
-dev.set_sample_period(100)  # 100 ms sampling interval
+try:
+    dev.set_curr_range("1000uA")   # Set current range before test
+except:
+    pass                           # Some firmware versions handle this automatically
+dev.set_curr_range("1000uA")
+dev.set_sample_period(100)         # 100 ms → ~10 samples/second
 
-# 4) RUN CHRONOAMPEROMETRY AT CV-OPTIMIZED 0.3 V
-# Step from 0 V (quiet) to 0.3 V for 29 seconds
+# ── SECTION 6: DEFINE CHRONOAMPEROMETRY PARAMETERS ──────────────────────────
+# Chronoamperometry applies a potential step and records current vs. time.
+# quietValue / quietTime: hold at 0 V for 1 s before the step to allow the
+#   electrochemical system to equilibrate (no current flows at open circuit).
+# step: at t=0 ms, hold 0 V; at t=0 ms step to 0.3 V and hold for 29 s.
+# 0.3 V was determined by cyclic voltammetry as the H₂O₂ oxidation peak —
+# the potential at which GOx-produced H₂O₂ is oxidized most efficiently.
 name = "chronoamp"
 test_param = {
     "quietValue": 0.0,
-    "quietTime":  1000,         # 1 s equilibration
-    "step": [(0, 0.0), (29000, 0.3)],
+    "quietTime":  1000,                      # 1 s equilibration at 0 V
+    "step": [(0, 0.0), (29000, 0.3)],        # Step to 0.3 V, hold 29 s
 }
 dev.set_param(name, test_param)
-print("Running chronoamperometry measurement...")
-t, volt, curr = dev.run_test(name, display="pbar", filename="data.txt")
 
-# 5) BUILD DATAFRAME AND SAVE
-df_raw = pd.DataFrame({"time_s": t, "voltage_V": volt, "current_uA": curr})
-df_raw = df_raw.sort_values("time_s").reset_index(drop=True)
-df_raw["time_s"] = df_raw["time_s"].round(2)
-df_raw.to_excel("chrono_data.xlsx", index=False)
+# ── SECTION 7: MEASUREMENT LOOP WITH AUTOMATIC RE-RUN ───────────────────────
+# Physiologically valid blood glucose is 0–50 mM. If the computed concentration
+# falls outside this range, the measurement is flagged as an artifact (e.g., from
+# poor strip contact, electrical noise, or a missed step) and the test re-runs.
+# The loop retries up to max_retries (5) times before giving up and sending
+# an error code to the OLED.
+concentration  = None
+df_raw         = None
+curr           = None
+peak_current_uA = None
+peak_time      = None
 
-# 6) PLOT — voltage and current vs. time
-plt.figure(figsize=(9, 6))
-plt.subplot(211)
-plt.title("Chronoamperometry: Voltage and Current vs. Time")
-plt.plot(t, volt); plt.ylabel("Potential (V)"); plt.grid(True)
-plt.subplot(212)
-plt.plot(t, curr); plt.ylabel("Current (µA)"); plt.xlabel("Time (s)"); plt.grid(True)
-plt.tight_layout(); plt.show()
+for attempt in range(1, max_retries + 1):
+    print(f"\nRunning test... Attempt {attempt}/{max_retries}")
 
-# 7) EXTRACT PEAK CURRENT
-# Ignore first 1 s to exclude initial transient noise from potential step
-df_window = df_raw[df_raw["time_s"] >= 1.0]
-max_current_uA = float(df_window["current_uA"].max())
-print(f"Peak current: {max_current_uA:.3f} µA")
+    # Run the chronoamperometry test via the Rodeostat.
+    # Returns three lists: time (s), voltage (V), and current (µA).
+    t, volt, curr = dev.run_test(name, display="pbar", filename=datafile)
 
-# 8) COMPUTE GLUCOSE CONCENTRATION
-# Final calibration equation (April 26, R² = 0.935):
-# C (mM) = (I_peak (µA) + 5.415) / 3.7379
-concentration_mM = (max_current_uA + 5.415) / 3.7379
-concentration_mM = max(0, concentration_mM)  # Physical constraint: concentration ≥ 0
-print(f"Glucose Concentration: {concentration_mM:.2f} mM")
+    # Build a pandas DataFrame for structured processing and export.
+    df_raw = pd.DataFrame({
+        "time_s":     t,
+        "voltage_V":  volt,
+        "current_uA": curr
+    })
+    df_raw = df_raw.sort_values("time_s").reset_index(drop=True)
+    df_raw["time_s"] = df_raw["time_s"].round(2)
 
-# 9) SEND TO OLED DISPLAY
-oled.write(f"{concentration_mM:.1f}\n".encode())
-time.sleep(0.3)
-while oled.in_waiting:
-    print("OLED:", oled.readline().decode(errors="ignore").strip())
+    # Save raw data to Excel for archiving and later analysis.
+    df_raw.to_excel(out_01s, index=False)
+    print("Saved:", out_01s)
+
+    # Extract peak current by absolute magnitude.
+    # Using abs() captures the peak regardless of polarity — important because
+    # the Cottrell current can appear with a positive or negative sign depending
+    # on Rodeostat lead orientation and strip electrode convention.
+    peak_idx        = df_raw["current_uA"].abs().idxmax()
+    peak_time       = float(df_raw.loc[peak_idx, "time_s"])
+    peak_current_uA = float(df_raw.loc[peak_idx, "current_uA"])
+    print(f"Peak current at {peak_time:.2f} s: {peak_current_uA:.3f} µA")
+
+    # Apply calibration equation (inverted linear model):
+    #   C (mM) = (I_peak (µA) - CAL_INTERCEPT) / CAL_SLOPE
+    concentration = (peak_current_uA - CAL_INTERCEPT) / CAL_SLOPE
+    print(f"Calculated concentration: {concentration:.2f} mM")
+
+    # Quality gate: accept only physiologically plausible results (0–50 mM).
+    # Values outside this range indicate a failed measurement — caused by
+    # poor strip contact, a transient noise spike dominating peak extraction,
+    # or electrical interference. Trigger a re-run automatically.
+    if 0 <= concentration <= 50:
+        print("Concentration in valid range. Accepting result.")
+        break
+    else:
+        print("Concentration out of range (<0 or >50 mM). Re-running...")
+        concentration = None
+        time.sleep(1)   # Brief pause before next attempt
+
+# ── SECTION 8: OUTPUT ────────────────────────────────────────────────────────
+if concentration is None:
+    # All retries exhausted — send error code to OLED
+    print("\nNo valid concentration obtained after max retries.")
+    oled.write(b"ERR\n")
+else:
+    # Plot the final valid run: voltage and current vs. time,
+    # with a vertical dashed line marking the peak current time point.
+    plt.figure(figsize=(9, 6))
+    plt.subplot(211)
+    plt.title("Chronoamperometry: Voltage and Current vs. Time")
+    plt.plot(df_raw["time_s"], df_raw["voltage_V"])
+    plt.ylabel("Potential (V)"); plt.grid(True)
+    plt.subplot(212)
+    plt.plot(df_raw["time_s"], df_raw["current_uA"])
+    plt.axvline(x=peak_time, linestyle="--", label=f"Peak @ {peak_time:.2f} s")
+    plt.ylabel("Current (µA)"); plt.xlabel("Time (s)")
+    plt.grid(True); plt.legend()
+    plt.tight_layout(); plt.show()
+
+    print(f"Final peak current: {peak_current_uA:.3f} µA")
+    print(f"Final concentration: {concentration:.2f} mM")
+
+    # Send concentration to Arduino over USB serial as a plain string + newline.
+    # The Arduino sketch listens for '\n' as the message terminator, then
+    # parses the string and renders it on the OLED screen.
+    # This communication happens entirely through the USB cable — no wireless,
+    # no Arduino IDE required. Python writes; Arduino reads and displays.
+    oled.write(f"{concentration:.1f}\n".encode())
+    time.sleep(0.3)
+    while oled.in_waiting:
+        print("OLED:", oled.readline().decode(errors="ignore").strip())
+
 oled.close()
 ```
 
@@ -855,6 +949,8 @@ All calibration data collected over the semester:
 - [Glucometer Preliminary Design Presentation](https://github.com/user-attachments/files/25115353/Glucometer.Preliminary.Design.Presentation.pdf)
 - [Initial Design Report](https://github.com/user-attachments/files/25423979/Initial.Design.Report.pptx)
 - [SweetSpot GANTT Chart](https://github.com/user-attachments/files/27147929/SweetSpot.GANTT.Chart.-.Gantt.Chart.Template.3.pdf)
+- [SweetSpot Final Design Presentation.pdf](https://github.com/user-attachments/files/27409406/SweetSpot.Final.Design.Presentation.pdf)
+
 
 ---
 

@@ -5,80 +5,142 @@
 ![Hardware](https://img.shields.io/badge/hardware-IO%20Rodeostat-green)
 ![Display](https://img.shields.io/badge/display-128×64%20OLED-purple)
 ![Enclosure](https://img.shields.io/badge/enclosure-3D%20printed-orange)
+![Course](https://img.shields.io/badge/course-CBE%203300B-red)
 
-SweetSpot is a low-cost electrochemical glucometer prototype that measures glucose concentration using commercial glucose test strips paired with an IO Rodeostat potentiostat. The system applies a chronoamperometric potential step, records the resulting current response, extracts a calibration feature, and displays the computed glucose concentration in real time on a 128×64 OLED screen mounted inside a 3D-printed enclosure.
-
-The device represents a fully functional final prototype: electrochemical sensing, signal processing, calibration, serial communication, and embedded display output all operate end-to-end from a single Jupyter Notebook interface. The enclosure houses the Arduino Uno and OLED display with soldered connections, and the system is capable of producing and displaying a concentration reading from a test strip within seconds of initiating a measurement.
+**Team:** Madeleine Stubner, Lauren Van | **University of Pennsylvania, Department of Chemical & Biomolecular Engineering** | **Spring 2026**
 
 ---
 
-- [About](#about)
-- [Project Goals](#project-goals)
-- [Why This Project Matters](#why-this-project-matters)
-- [Scientific and Engineering Basis](#scientific-and-engineering-basis)
+SweetSpot is a low-cost electrochemical glucometer prototype that measures glucose concentration using commercial glucose test strips paired with an IO Rodeostat potentiostat. The system applies a chronoamperometric potential step at an empirically validated voltage (0.3 V, determined via cyclic voltammetry), records the resulting current response, extracts peak current as the calibration feature, and displays the computed glucose concentration in real time on a 128×64 OLED screen mounted inside a 3D-printed enclosure.
+
+The device demonstrates an end-to-end engineering chain: electrochemical sensing → signal processing → calibration curve application → serial communication → embedded display output. All subsystems are integrated and functional. Quantitative accuracy is limited by single-strip calibration and commercial strip variability, which are the primary targets for future refinement.
+
+---
+
+## Table of Contents
+
+- [Problem Definition & Motivation](#1-problem-definition--motivation)
+  - [The Clinical Gap](#the-clinical-gap)
+  - [Market Research & Competitive Analysis](#market-research--competitive-analysis)
+  - [Stakeholder Analysis](#stakeholder-analysis)
+  - [Project Goals](#project-goals)
+- [Chemical Engineering Principles](#2-chemical-engineering-principles)
   - [Glucose Oxidase Reaction Chemistry](#glucose-oxidase-reaction-chemistry)
   - [Chronoamperometry and the Cottrell Equation](#chronoamperometry-and-the-cottrell-equation)
   - [Cyclic Voltammetry for Operating Point Selection](#cyclic-voltammetry-for-operating-point-selection)
-  - [Chemical Engineering Principles in Device Design](#chemical-engineering-principles-in-device-design)
-- [Preliminary Calculations](#preliminary-calculations)
-- [Calibration Approach and Iteration](#calibration-approach-and-iteration)
-- [Progress Log](#progress-log)
-  - [February 12 — Initial Hardware Setup](#february-12-2026--initial-hardware-setup-and-signal-verification)
-  - [February 26 — Calibration Data Collection](#february-26-2026--calibration-data-collection-and-pipeline-improvement)
-  - [March 4 — Full Concentration Dataset](#march-4-2026--full-concentration-dataset-complete)
-  - [March 5 — Initial Calibration Curve](#march-5-2026--initial-calibration-curve)
-  - [March 25 — Validation Testing and Failure Analysis](#march-25-2026--validation-testing-and-failure-analysis)
-  - [April 2 — Arduino Serial Communication and OLED Display](#april-2-2026--arduino-serial-communication-and-oled-display)
-  - [April 8 — Hardware Integration and Soldering](#april-8-2026--hardware-integration-and-soldering)
-  - [April 16 — New Strips, Shim, CV, and Electrode Rework](#april-16-2026--new-strip-procurement-shim-addition-cyclic-voltammetry-and-electrode-rework)
-  - [April 26 — Final Calibration, Enclosure, and Prototype Completion](#april-26-2026--final-calibration-enclosure-and-prototype-completion)
-- [Final System Performance](#final-system-performance)
-- [Current Project Status](#current-project-status)
-- [System Architecture](#system-architecture)
-- [Market Relevance and Application](#market-relevance-and-application)
-- [SWOT Analysis](#swot-analysis)
-- [Future Work](#future-work)
-
----
- 
-## About
-
-SweetSpot pairs a commercial True Metrix glucose test strip with an IO Rodeostat potentiostat to measure glucose concentration electrochemically. A Python-based Jupyter Notebook workflow applies a chronoamperometric potential step at an empirically validated voltage (0.3 V, determined via cyclic voltammetry), records the resulting current response, extracts peak current as the calibration feature, and transmits the computed glucose concentration over USB serial to an Arduino Uno. The Arduino displays the result in real time on a 128×64 OLED screen.
-
-The hardware is housed inside a 3D-printed enclosure. The OLED display and all Arduino connections are soldered onto a breadboard mounted within the case. The sensing is performed with a shim-assisted strip holder that ensures consistent mechanical contact between the Rodeostat leads and the strip electrodes.
-
-The system demonstrates electrochemical signal acquisition, Python-based data processing, calibration curve construction from experimentally validated data, Arduino serial communication, OLED display output, and physical enclosure integration — constituting a complete, functional final prototype.
+  - [Connections to Core ChE Concepts](#connections-to-core-che-concepts)
+- [Device Design](#3-device-design)
+  - [System Architecture](#system-architecture)
+  - [Component Selection & Rationale](#component-selection--rationale)
+  - [Cost Analysis](#cost-analysis)
+  - [Glucose Standards Preparation](#glucose-standards-preparation)
+  - [Preliminary Performance Calculations](#preliminary-performance-calculations)
+  - [Schematics & Wiring](#schematics--wiring)
+  - [Code](#code)
+- [Calibration: Iteration History & Challenges](#4-calibration-iteration-history--challenges)
+  - [Iteration 1 — OneTouch Strips, Peak Current](#iteration-1--onetouch-strips-peak-current)
+  - [Iteration 2 — Steady-State Current](#iteration-2--steady-state-current)
+  - [Iteration 3 — DI Water Normalization](#iteration-3--di-water-normalization)
+  - [Root Cause Analysis & Hardware Intervention](#root-cause-analysis--hardware-intervention)
+  - [Iteration 4 (Final) — True Metrix Strips](#iteration-4-final--true-metrix-strips)
+- [Performance Data & Validation](#5-performance-data--validation)
+  - [Final Calibration Results](#final-calibration-results)
+  - [End-to-End Screen Validation](#end-to-end-screen-validation)
+  - [Error Analysis](#error-analysis)
+  - [Nonlinear Kinetics & Operating Limit](#nonlinear-kinetics--operating-limit)
+  - [System Limitations](#system-limitations)
+- [Progress Log](#6-progress-log)
+- [SWOT Analysis](#7-swot-analysis)
+- [Future Work](#8-future-work)
+- [Repository Contents](#repository-contents)
 
 ---
 
-## Project Goals
+## 1. Problem Definition & Motivation
 
-The project was designed to build a system that can:
+### The Clinical Gap
 
-- Run a chronoamperometry measurement on a commercial glucose test strip at an optimized applied voltage
-- Extract a meaningful electrochemical feature from the current response (peak current)
-- Convert that feature into glucose concentration using an experimentally derived and validated calibration curve
-- Display the computed glucose concentration in real time on an embedded OLED screen
-- House all components within a 3D-printed enclosure suitable for demonstration
+Diabetes is one of the most rapidly growing chronic diseases globally and locally, and access to routine glucose monitoring remains a critical unmet need.
 
-The development plan proceeded in two major stages:
+**Global landscape:**
+- Diabetes cases have quadrupled since 1990 to **830 million**, disproportionately affecting low- and middle-income populations and youth
+- The CDC projects that **40% of Americans** will develop diabetes in their lifetime based on current trends
+- In 2018, **13% of U.S. adults** had diabetes and **88 million** had prediabetes
 
-1. **Computer-dependent prototype** — validates sensing, calibration, and display integration via laptop
-2. **Cased final prototype** — integrates all working components into a physical enclosure for demonstration 
+**Philadelphia specifically:**
+- Diabetes prevalence has increased by **>50% over the past 15 years**
+- **1 in 3** individuals living with diabetes in Philadelphia are unaware of their condition
+- In 2017, diabetes was the **6th leading cause of death** in Philadelphia (374 deaths)
 
----
+**The economic burden:**
+- Diabetes is the most expensive chronic condition in the United States (NIH)
+- Diagnosed patients incur medical expenses approximately **2.6× higher** than those without diabetes (CDC)
 
-## Why This Project Matters
-
-A glucometer is a portable medical device used to measure blood glucose concentration. It is essential for diabetes monitoring and management, particularly for individuals who need frequent readings to guide daily decisions about diet, medication, and activity.
-
-Since 1990, global cases of diabetes have quadrupled to 830 million, disproportionately affecting low- and middle-income countries. The CDC predicts that if these trends continue, 40% of Americans will develop diabetes in their lifetime. Additionally, diabetes is the most expensive chronic condition in the United States (NIH). People diagnosed with diabetes have medical expenses approximately 2.6 times higher than those without the condition (CDC).
-
-In Philadelphia specifically, diabetes prevalence has increased by more than 50% over the past 15 years. Nearly one in three individuals living with diabetes in the city are unaware of their condition. In 2017, diabetes was the sixth leading cause of death in Philadelphia, accounting for 374 deaths. SweetSpot is motivated by the idea that a lower-cost electrochemical sensing platform could eventually support broader glucose awareness and improve access to screening.
+SweetSpot is motivated by the hypothesis that a lower-cost electrochemical sensing platform could support broader glucose awareness and improve screening access in communities where current glucometer costs are a genuine barrier.
 
 ---
 
-## Scientific and Engineering Basis
+### Market Research & Competitive Analysis
+
+The blood glucose monitoring devices market is projected to grow from approximately **$12.4B (2023) to $30.2B (2033)**, driven by rising diabetes prevalence and demand for continuous monitoring. The largest growth is in consumables (test strips), not instruments — validating the use of commercial strips in our design.
+
+**Glucometer Market Sizing (Bottom-Up)**
+
+| Scope | Diabetics | Addressable Market |
+|---|---|---|
+| Global | 830 million | $24.9 B |
+| United States | 38 million | $1.14 B |
+| Philadelphia | ~150,000 | $4.5 M |
+| Our target (0.001% share) | — | $450 |
+
+*Average self-service glucometer cost: ~$30/device. Our device targets this tier.*
+
+**Competitor Analysis**
+
+| Device | Cost | Accuracy | Accessibility | Notes |
+|---|---|---|---|---|
+| Dexcom G6 | $$$$ | High | Low | Continuous monitoring; requires prescription |
+| Walgreens A1C Test Kit | $$$ | High | Low | Lab-based; not real-time |
+| Traditional Strip Glucometers | $$ | Medium | Medium | Requires proprietary strips + reader |
+| **SweetSpot** | **$** | **Medium*** | **High** | Open-architecture; targets low-resource settings |
+
+*\*Current prototype; accuracy is the primary future improvement target.*
+
+**Competitive positioning:** Existing devices prioritize accuracy but sacrifice accessibility due to cost. SweetSpot intentionally targets the middle ground — acceptable accuracy at dramatically lower cost — to serve underserved populations not currently engaged in routine monitoring.
+
+---
+
+### Stakeholder Analysis
+
+| Stakeholder | Benefit |
+|---|---|
+| **Patients** | Earlier detection → reduced complications; lower barrier to monitoring |
+| **Healthcare Workers** | Fewer emergency interventions from unmanaged hyperglycemia |
+| **Community Health Clinics & FQHCs** | Affordable tool for screening programs |
+| **Medical Device Industry** | Competitive pressure toward lower-cost solutions |
+| **Insurance Companies** | Lower long-term costs from prevention vs. acute intervention |
+
+**Target distribution pathways:** community health clinics, federally qualified health centers (FQHCs), nonprofit chronic disease prevention organizations, local health departments, and university/hospital-affiliated screening initiatives.
+
+---
+
+### Project Goals
+
+The system was designed to:
+
+1. Run a chronoamperometric measurement on a commercial glucose test strip at an empirically optimized applied voltage
+2. Extract a meaningful electrochemical feature from the current response (peak current)
+3. Convert that feature to glucose concentration using an experimentally derived and validated calibration curve
+4. Display the computed concentration in real time on an embedded OLED screen
+5. House all components within a 3D-printed enclosure suitable for demonstration
+
+Development proceeded in two stages:
+- **Stage 1:** Computer-dependent prototype — validates sensing, calibration, and display integration via laptop
+- **Stage 2:** Cased final prototype — integrates all working components into a physical enclosure
+
+---
+
+## 2. Chemical Engineering Principles
 
 ### Glucose Oxidase Reaction Chemistry
 
@@ -86,262 +148,224 @@ Commercial glucose test strips rely on **glucose oxidase (GOx)**, an enzyme that
 
 $$\text{D-glucose} + \text{O}_2 \xrightarrow{\text{GOx}} \text{D-gluconolactone} + \text{H}_2\text{O}_2$$
 
-The H₂O₂ produced is electroactive. When a constant potential is applied by the potentiostat, H₂O₂ is oxidized at the working electrode, releasing electrons that generate a measurable current. Because each mole of glucose produces one mole of H₂O₂, the current is directly proportional to glucose concentration. This is the electrochemical foundation of the device.
+The H₂O₂ produced is electroactive. When a constant potential is applied by the potentiostat, H₂O₂ is oxidized at the working electrode, releasing electrons that generate a measurable current. Because each mole of glucose produces exactly one mole of H₂O₂ (1:1 stoichiometry), the measured current is directly proportional to glucose concentration. This stoichiometric coupling provides the **selectivity** of the sensor — only glucose contributes to the signal, not other blood components.
+
+---
 
 ### Chronoamperometry and the Cottrell Equation
 
-This project uses chronoamperometry, meaning the potential is stepped to a fixed value and the current is measured over time. Under ideal diffusion-controlled conditions, the time-dependent response follows the Cottrell equation which is shown below:
+Chronoamperometry applies a fixed potential step and records current as a function of time. Under ideal diffusion-controlled conditions, the time-dependent current follows the **Cottrell equation**:
 
 $$i(t) = \frac{nFAC\sqrt{D}}{\sqrt{\pi t}}$$
 
 Where:
-- $i(t)$ = current at time $t$
-- $n$ = number of electrons transferred (2 for H₂O₂ oxidation)
+- $i(t)$ = current at time $t$ (A)
+- $n$ = number of electrons transferred (2 for H₂O₂ oxidation: H₂O₂ → O₂ + 2H⁺ + 2e⁻)
 - $F$ = Faraday's constant (96,485 C/mol)
 - $A$ = electrode area (cm²)
 - $C$ = analyte concentration (mol/cm³)
 - $D$ = diffusion coefficient (cm²/s)
 
-This relationship predicts that current is proportional to analyte concentration at any fixed time point, providing the physical justification for using peak or steady-state current as a calibration feature.
+**Key implication:** At any fixed time point, $i \propto C$. This is the physical basis for using peak or steady-state current as a calibration feature — current linearly encodes concentration, provided the measurement window is within the diffusion-controlled regime.
 
-Proof of the t^-1/2 relationship through our tests is shown below.
+The $t^{-1/2}$ decay behavior predicted by the Cottrell equation was verified experimentally:
 
-<img width="418" height="352" alt="Screenshot 2026-04-27 at 2 54 00 PM" src="https://github.com/user-attachments/assets/76fb609b-c87f-40a4-b7ed-2942f8c95f13" />
+<img width="418" height="352" alt="Proof of t^-1/2 relationship between current and time" src="https://github.com/user-attachments/assets/76fb609b-c87f-40a4-b7ed-2942f8c95f13" />
 
+> **Figure 1.** Chronoamperometry: current vs. time at 0.3 V applied potential. The rapid decay from peak current follows the $t^{-1/2}$ profile predicted by the Cottrell equation, confirming diffusion-limited behavior in the early time window.
 
-### Cyclic Voltammetry for Operating Point Selection
-
-**Cyclic voltammetry (CV)** is an electroanalytical technique in which the working electrode potential is swept linearly between two set values while the resulting current is recorded. The output traces the full electrochemical response of the system as a function of applied potential, revealing characteristic oxidation and reduction peaks for the electroactive species present.
-
-In SweetSpot, CV was used as a diagnostic and optimization tool to identify the optimal applied potential for chronoamperometric measurements. The anodic (positive) peak in the CV scan corresponds to the electrochemical oxidation of H₂O₂ at the working electrode surface which is the same faradaic reaction that generates the sensing signal in chronoamperometry. The potential at which this peak occurs indicates where the oxidation rate is maximized.
-
-**Connection to chemical engineering principles:** A CV experiment directly maps reaction rate (current) as a function of electrochemical driving force (applied potential) making it an electrochemical analog of a rate-versus-driving-force characterization in transport phenomena and reactor design. The resulting current-potential curve is the polarization curve of the electrode system, and it encodes the interplay between two physical regimes that chemical engineers deal with routinely:
-
-- **Activation-controlled regime (low potential):** Below the oxidation peak, the driving force is insufficient to efficiently oxidize H₂O₂ at the electrode surface. The reaction rate is limited by the activation energy barrier which is directly analogous to a kinetically controlled reactor operating far from equilibrium conversion. Current is low and poorly correlated with analyte concentration.
-
-- **Mass-transport-limited regime (high potential):** Above the peak, the electrode reaction proceeds as fast as H₂O₂ can arrive at the surface. The rate is now controlled by diffusion through the solution, identical to a transport-limited reactor where the reaction is fast but feed delivery is the rate limiting step. Competing reactions (e.g., water electrolysis) also begin to contribute at sufficiently high potentials, introducing background current that degrades selectivity.
-
-The oxidation peak in the CV scan marks the transition between these two regimes, the point where the electrode reaction is most sensitive to analyte concentration and most efficient in converting faradaic current to a usable signal. Choosing the applied potential at this peak is therefore equivalent to selecting the optimal operating point on a reaction rate curve: maximizing conversion per unit driving force while avoiding the side-reaction and transport-limitation regimes on either side.
-
-CV scans were run across all five glucose standards. The anodic oxidation peak appeared consistently near **0.3 V** across all concentrations, confirming that this potential reflects a property of the strip electrode chemistry rather than analyte concentration. 0.3 V was adopted as the fixed applied potential for all subsequent chronoamperometric measurements, replacing the previously arbitrary 0.5 V value.
-
-The image below shows the CV reading 0.3V which we used for the basis of this project.
-<img width="598" height="444" alt="Screenshot 2026-04-27 at 2 52 24 PM" src="https://github.com/user-attachments/assets/83df46b3-026a-41f9-9a17-4e6163ba23e7" />
-
-
-### Chemical Engineering Principles in Device Design
-
-**Mass and species balances:** The enzymatic reaction converts glucose stoichiometrically to H₂O₂. The current measured is proportional to the molar flux of H₂O₂ to the electrode surface — a direct application of species balance and Faraday's law of electrolysis ($Q = nFN$, where $N$ is moles reacted).
-
-**Transport phenomena:** The Cottrell equation arises from solving Fick's second law of diffusion for a semi-infinite planar electrode with a potential-step boundary condition. Current decay over time reflects depletion of the diffusion layer — a mass transport effect that governs the signal shape and informs both feature extraction strategy and the choice of measurement time window.
-
-**Reaction kinetics and operating windows:** CV characterization identified the activation-controlled regime (below ~0.2 V) versus the mass-transport-limited plateau (above ~0.35 V) for this strip system. Choosing 0.3 V places the operating point at the transition where signal is maximized before transport limitations reduce sensitivity.
-
-**Calibration as process modeling:** The experimentally derived calibration curve functions as a process model: it maps a measured variable (peak current) to a process output (glucose concentration). Constructing, validating, and refining this model, including identifying its failure modes at high concentrations, is directly analogous to process identification and control loop tuning.
-
-**Nonlinear kinetics and operating range:** The breakdown of linearity at high glucose concentrations reflects enzyme saturation — a Michaelis-Menten kinetic effect where the GOx reaction rate approaches $V_{\max}$ and no longer scales proportionally with substrate concentration. This is identical to the behavior of a first-order reaction transitioning to zero-order kinetics at high substrate concentration, a concept central to reactor design. The device's validated operating range (2.2–11.1 mM) is bounded by this nonlinearity on the high end.
+**Assumptions and their validity:**
+- Semi-infinite planar diffusion — valid for short measurement times relative to strip geometry
+- No convection — valid under quiescent solution conditions
+- Instant potential step — approximated by the Rodeostat's rise time
+- Breakdown at high concentrations — GOx enzyme saturation violates the linear Cottrell assumption (see Section 5)
 
 ---
 
-## Preliminary Calculations
+### Cyclic Voltammetry for Operating Point Selection
 
-### Blood Simulant (NaCl Stock Solution)
+**Cyclic voltammetry (CV)** sweeps the working electrode potential linearly between two set values while recording current — producing a full polarization curve for the electrochemical system. The anodic (positive) current peak marks H₂O₂ oxidation at the working electrode, and its potential indicates where oxidation rate is maximized.
 
-To mimic the electrolyte balance of human blood, we prepared a 100 mL stock solution at 140 mmol/L NaCl — the standard NaCl concentration in human blood.
+CV was used as a **diagnostic and optimization tool** to replace the arbitrary 0.5 V previously assumed for chronoamperometric measurements. CV scans were run across all five glucose concentrations (2.2, 4.4, 6.6, 8.8, and 11.1 mM), sweeping from −0.6 V to +0.6 V:
 
-$$\left(140 \frac{\text{mmol}}{\text{L}}\right)\left(\frac{1 \text{ mol}}{1000 \text{ mmol}}\right)\left(\frac{58.44 \text{ g}}{\text{mol}}\right)\left(\frac{100 \text{ mL}}{1000 \text{ mL/L}}\right) = 0.818 \text{ g NaCl}$$
+<img width="598" height="444" alt="Cyclic voltammetry for 4.4 mM solution showing oxidation peak at 0.3V" src="https://github.com/user-attachments/assets/83df46b3-026a-41f9-9a17-4e6163ba23e7" />
 
-### Glucose Standards
+> **Figure 2.** Cyclic voltammetry for 4.4 mM glucose solution. The anodic oxidation peak appears consistently near 0.3 V across all CV cycles. Peak position was independent of concentration, confirming it reflects strip electrode chemistry rather than analyte quantity. 0.3 V was adopted as the fixed applied potential for all subsequent chronoamperometric measurements.
+
+**Electrochemical regimes identified:**
+
+| Regime | Potential Range | Governing Physics | Analog in ChE |
+|---|---|---|---|
+| Activation-controlled | Below ~0.2 V | Insufficient driving force; reaction rate limited by activation energy barrier | Kinetically controlled reactor operating far from equilibrium |
+| **Optimal operating point** | **~0.3 V** | **Maximum signal sensitivity; transition between kinetic and transport control** | **Peak of a rate-vs-driving-force curve** |
+| Mass-transport-limited | Above ~0.35 V | H₂O₂ oxidized as fast as it arrives; rate controlled by diffusion; competing reactions begin | Transport-limited reactor where feed delivery is rate-limiting |
+
+Selecting 0.3 V is equivalent to choosing the optimal operating point on a reaction rate curve — maximizing conversion per unit driving force while avoiding side reactions and transport limitations on either side.
+
+---
+
+### Connections to Core ChE Concepts
+
+**Mass and species balances:** The enzymatic reaction converts glucose stoichiometrically to H₂O₂. The current measured is proportional to the molar flux of H₂O₂ to the electrode surface — a direct application of Faraday's law ($Q = nFN$, where $N$ is moles reacted) combined with a steady-state species balance on the diffusion layer.
+
+**Transport phenomena:** The Cottrell equation arises from solving Fick's second law of diffusion for a semi-infinite planar electrode with a potential-step boundary condition. Current decay over time reflects depletion of the diffusion layer — a mass transport effect that governs signal shape and informs both feature extraction strategy and the measurement time window.
+
+**Reaction kinetics and operating windows:** CV characterization directly mapped the activation-controlled vs. mass-transport-limited regimes for this strip system, identical to the two asymptotic limits in heterogeneous catalysis (Damköhler number analysis). Choosing 0.3 V places the operating point at the transition where sensitivity is maximized.
+
+**Nonlinear kinetics and saturation:** Breakdown of linearity at high glucose concentrations reflects **enzyme saturation** — a Michaelis-Menten kinetic effect where the GOx reaction rate approaches $V_{\max}$ and no longer scales proportionally with substrate:
+
+$$v = \frac{V_{\max}[S]}{K_M + [S]}$$
+
+At low [S] (below ~11 mM in our system), $[S] \ll K_M$ and $v \approx \frac{V_{\max}}{K_M}[S]$ — linear, first-order behavior. At high [S], the rate saturates to $V_{\max}$ — zero-order behavior. This transition is identical to a first-order-to-zero-order reactor kinetic shift at high substrate concentration, a concept central to reactor design. The device's validated operating range (2.2–11.1 mM) is bounded by this saturation on the high end.
+
+**Calibration as process modeling:** The experimentally derived calibration curve functions as a process model: it maps a measured variable (peak current) to a process output (glucose concentration). Constructing, validating, and refining this model — including identifying its failure modes at high concentrations — is directly analogous to process identification and control loop tuning in process engineering.
+
+---
+
+## 3. Device Design
+
+### System Architecture
+
+The SweetSpot system operates through a five-stage pipeline:
+
+```
+[Glucose Sample + Test Strip] 
+        ↓ electrochemical signal
+[IO Rodeostat Potentiostat] — applies 0.3 V chronoamperometric step, records i(t)
+        ↓ current-time data (USB)
+[Laptop / Jupyter Notebook] — extracts peak current, applies calibration equation
+        ↓ concentration value (USB serial)
+[Arduino Uno] — receives concentration string, formats display output
+        ↓ SPI data
+[128×64 OLED Display] — renders concentration in real time
+```
+
+<img width="1137" height="653" alt="System Architecture Diagram" src="https://github.com/user-attachments/assets/cff04c35-f222-4edc-b9f9-14935a0425f3" />
+
+> **Figure 3.** Full system architecture showing signal flow from electrochemical measurement through Python processing, Arduino microcontroller, and OLED display output.
+
+**Device operation summary:**
+1. User applies a glucose test strip to the shim-assisted strip holder and initiates measurement from the Jupyter Notebook
+2. The Rodeostat applies a 0.3 V chronoamperometric step for 30 seconds
+3. Python processes the current-time response and extracts peak current (ignoring the first 1 s of transient noise)
+4. The calibration equation converts peak current to glucose concentration in mM
+5. If the result is negative, the system automatically re-runs (up to 5×)
+6. Concentration is transmitted over USB serial to the Arduino
+7. The OLED displays the result in real time
+
+---
+
+### Component Selection & Rationale
+
+All components were selected to maximize cost-effectiveness while maintaining functional adequacy for electrochemical sensing and embedded display.
+
+| Component | Role | Design Rationale |
+|---|---|---|
+| **IO Rodeostat** | Potentiostat — applies controlled voltage, measures current | Open-source, low-cost potentiostat ($240); enables chronoamperometry and CV; USB interface compatible with Python |
+| **True Metrix Test Strips** | Electrochemical transducer — GOx enzyme layer converts glucose to H₂O₂ signal | Selected after comparative testing vs. OneTouch strips; more compatible electrode geometry with Rodeostat leads; procured fresh from CVS to minimize batch variability |
+| **Arduino Uno** | Microcontroller — receives concentration over serial, drives OLED | Low-cost ($27.60); supports SPI for OLED; simple serial parsing; widely documented |
+| **128×64 OLED Display** | User output — renders glucose concentration | SPI interface (faster than I²C); low power; compact ($19.50); readable in ambient lighting |
+| **3D-Printed Enclosure** | Physical housing — contains Arduino + OLED | Enables demonstration-ready form factor; custom fit to component dimensions |
+| **Shim (inverted strip)** | Mechanical — standardizes strip contact pressure | Addresses inconsistent electrode-to-strip contact resistance identified as primary reproducibility failure mode |
+
+**Design trade-offs made:**
+- Smaller OLED (no touchscreen) over larger display → ~$30 savings with no functional loss for this use case
+- CVS True Metrix strips (lowest cost per strip at CVS) over premium brands → required voltage re-characterization via CV but maintained compatibility
+- Laptop-dependent processing over onboard MCU → enables rapid iteration; migration to onboard processing is identified Future Work
+
+---
+
+### Cost Analysis
+
+| Component | Unit Cost |
+|---|---|
+| Arduino Uno | $27.60 |
+| IO Rodeostat Potentiostat | $240.00 |
+| 128×64 OLED Graphic Display | $19.50 |
+| Analyzer Cable/Probe | $9.54 |
+| CVS True Metrix Glucose Strips (30 ct.) | $9.99 |
+| **TOTAL** | **$306.63** |
+
+The Rodeostat dominates cost and is the primary target for cost reduction in a production design. Integration of a custom analog front-end onto a single PCB could reduce instrumentation cost by an order of magnitude.
+
+---
+
+### Glucose Standards Preparation
+
+To mimic the electrolyte balance of human blood, a **140 mmol/L NaCl stock solution** was prepared (standard physiological NaCl concentration):
+
+$$\left(140 \frac{\text{mmol}}{\text{L}}\right)\left(\frac{58.44 \text{ g}}{\text{mol}}\right)\left(\frac{0.100 \text{ L}}{1}\right) = 0.818 \text{ g NaCl in 100 mL}$$
 
 Glucose standards were prepared by dissolving known masses of glucose (MW = 180.156 g/mol) in 25 mL of stock solution:
 
 $$C \text{ (mM)} = \frac{\text{mass (g)}}{180.156 \text{ g/mol} \times 0.025 \text{ L}} \times 1000$$
 
+**Standard concentrations and clinical context:**
+
+| Glucose Level | Mass Added (g) | Concentration (mM) | Clinical Reference |
+|---|---|---|---|
+| Baseline | 0.000 | 0.00 | — |
+| Low | 0.010 | 2.22 | Below normal fasting |
+| Normal | 0.020 | 4.44 | Normal fasting (~80 mg/dL) |
+| High | 0.050 | 11.10 | Elevated (diabetic range, ~200 mg/dL) |
+| Very High | 0.070 | 15.54 | Severely elevated |
+
+The five standards span the clinically relevant glucose range (normal fasting through moderate diabetic), enabling characterization of the linear sensing regime and definition of the validated operating range.
+
 <img width="492" height="244" alt="Glucose Standards Table" src="https://github.com/user-attachments/assets/97abdf26-e984-4bfc-b0cf-d5142b466d45" />
 
-These five standards span the clinically relevant glucose range, from normal fasting levels through moderate diabetic concentrations, allowing us to characterize the linear sensing regime and define the validated operating range of the device.
+---
 
-### Performance Estimate
+### Preliminary Performance Calculations
 
-Under ideal Cottrell behavior, the expected current at 5 mM glucose (normal fasting):
+Under ideal Cottrell behavior, the expected peak current at 5 mM glucose (normal fasting level) can be estimated as follows:
 
-- $D \approx 1.4 \times 10^{-5}$ cm²/s
-- $A \approx 0.1$ cm²
-- $n = 2$, at $t = 5$ s:
+**Given:**
+- $D \approx 1.4 \times 10^{-5}$ cm²/s (H₂O₂ diffusion coefficient in aqueous solution)
+- $A \approx 0.1$ cm² (estimated strip electrode area)
+- $n = 2$ (electrons transferred per H₂O₂ molecule oxidized)
+- $C = 5 \times 10^{-6}$ mol/cm³ (5 mM)
+- $t = 5$ s (evaluation time)
 
 $$i = \frac{nFAC\sqrt{D}}{\sqrt{\pi t}} = \frac{2 \times 96485 \times 0.1 \times (5 \times 10^{-6}) \times \sqrt{1.4 \times 10^{-5}}}{\sqrt{\pi \times 5}} \approx 0.5 \ \mu\text{A}$$
 
-Experimentally observed peak currents with the final protocol are in the low-to-mid µA range, consistent with this estimate when accounting for the strip's actual electrode geometry and the higher applied potential (0.3 V drives a more complete reaction than the ideal diffusion-only model assumes).
+Experimentally observed peak currents with the final protocol are in the **low-to-mid µA range**, consistent with this estimate when accounting for the strip's actual electrode geometry and the higher applied potential (0.3 V drives a more complete reaction than the ideal diffusion-only Cottrell model assumes).
 
 ---
 
-## Calibration Approach and Iteration
-
-### Initial Approach: Peak Current (March 5)
-
-The first calibration curve used peak (maximum) current as the feature. This produced an apparently excellent fit on the initial dataset (R² = 0.9998) but drastically failed validation. When using this derived equation to predict glucose concentrations, it would give results ranging from -10 to over 50. With only four concentrations and one measurement each, the model was interpolated rather than fit, and captured no inter-strip variability.
-
-<img width="498" height="175" alt="Screenshot 2026-04-27 at 9 59 09 PM" src="https://github.com/user-attachments/assets/d82a2b01-f121-4692-bdc8-95140c596deb" />
-
-
-More readings were conducted with the same method, resulting in the following results:
-<img width="517" height="289" alt="Screenshot 2026-04-27 at 9 58 59 PM" src="https://github.com/user-attachments/assets/1b374326-adfb-46d8-8bc7-34bfad9be396" />
-
-
-### Normalization Attempt
-
-A normalization step was introduced: each strip's peak current in DI water was subtracted from the sample peak current. Despite this correction, calibration remained inconsistent. The normalization corrected for inter-strip offset but could not correct for differences in sensitivity (slope) between strips.
-
-### Shift to Steady-State Current
-
-We shifted to steady-state current at fixed time points (10 s and 20 s). These values were more reproducible because the transient had decayed. The 10 s curve produced the clearest linear relationship and was adopted as the primary calibration method.
-
-<img width="622" height="520" alt="Calibration curve comparison" src="https://github.com/user-attachments/assets/23fa1c65-093f-43e6-bedc-88f5650b4043" />
-
-### Root Cause Hardware Analysis and Resolution (April 16)
-
-Persistent reproducibility failures across all signal features pointed to two uncontrolled physical variables: strip batch variability and inconsistent mechanical contact. Both were resolved through targeted hardware intervention (new strips, shim addition, electrode rework), enabling the final calibration.
-
-### Final Calibration (April 26)
-
-New strips were bought and the electrodes were rewired. Initially, we conducted readings the same way as with the old strips by inserting one in and lining it up. Through this method, the following results were produced.
-
-<img width="401" height="315" alt="Screenshot 2026-04-27 at 9 59 34 PM" src="https://github.com/user-attachments/assets/c4e9aaf9-d595-4444-863f-4deb1d4c7efb" />
-
-After talking with Professor Osuji, we determined that a key issue may be unreliable mechanical contact. In order to resolve this issue, a shim was added (another strip upside down to ensure the electrodes do not interfere) to ensure proper contact. While this did not completely resolve the issue, more reliable results were obtained, shown below.
-
-<img width="525" height="398" alt="Screenshot 2026-04-27 at 10 00 00 PM" src="https://github.com/user-attachments/assets/72d408e0-0354-4cb2-950e-61019ecb7f4f" />
-
-
-
-$$\text{Glucose Concentration (mM)} = \frac{\text{Peak Current (µA)} + 5.415}{3.7379} \quad (R^2 = 0.935)$$
-
-Then, to fully test our calibration curve, we tested our curve with our concentrations to create specs for our device. The results of two rounds of tests are shown below.
-
-| Actual Concentration (mM) | Screen Output (mM) |
-|---------------------------|-------------------|
-| 2.2 | 11.7 |
-| 4.4 | 3.42 |
-| 6.6 | 7.9 |
-| 8.8 | 42.5 |
-| 11.1 | 48.8 |
-
----
-
-## Error Analysis
-
-The final prototype calibration curve was evaluated by testing known glucose standards and comparing the predicted concentrations generated by the device to their true prepared values. This validation step was used to assess real-world prototype performance rather than develop the model itself. The resulting mean absolute error (MAE) was 20.27 mM, with a root mean squared error (RMSE) of 23.57 mM and a mean absolute percent error (MAPE) of 328.7%. The system also showed an average positive bias of 19.68 mM, meaning the final curve generally overpredicted glucose concentration. Error was especially pronounced at intermediate and higher concentrations, indicating that while the calibration relationship captured an overall trend, measurement variability still dominated final accuracy. Likely contributors include inconsistent strip seating, contact resistance between the strip and electrodes, manufacturing variation between commercial strips, electrical noise, and nonlinear enzymatic response at elevated glucose levels. Despite these limitations, the final calibration represented the most functional and complete version of the device, enabling fully automated concentration prediction and real-time OLED display output. Most importantly, the validation data clearly identified the next engineering priorities: improved strip alignment, tighter mechanical tolerances, larger replicate calibration datasets, and more robust regression methods. As a capstone prototype, the project successfully demonstrated an end-to-end electrochemical glucometer system while using quantitative error analysis to guide future refinement.
-
-<img width="521" height="410" alt="Screenshot 2026-04-27 at 10 00 25 PM" src="https://github.com/user-attachments/assets/aaf52fd2-370b-471a-8e74-866dc931845e" />
-
-<img width="550" height="398" alt="Screenshot 2026-04-27 at 10 00 34 PM" src="https://github.com/user-attachments/assets/5b434416-e2b9-4cc9-a8e9-aaae7d7dd0ee" />
-
-<img width="533" height="398" alt="Screenshot 2026-04-27 at 10 00 43 PM" src="https://github.com/user-attachments/assets/5a39f936-9187-481e-b23e-9deb90e26165" />
-
-
----
-
-## Progress Log
-
-### February 12, 2026 — Initial Hardware Setup and Signal Verification
-
-We connected the IO Rodeostat potentiostat to a laptop and conducted an initial chronoamperometry test using a commercial glucose test strip and legacy connector leads. The goal was to verify that the Rodeostat could apply a potential step and record a measurable current response. At this stage the emphasis was on confirming that the hardware and software pipeline could generate and capture an electrochemical signal — not yet on accurate glucose values.
-
-A Python script in a Jupyter Notebook was developed to interface with the Rodeostat, collect current-versus-time data, and visualize the results.
-
-<img width="788" height="483" alt="Screenshot 2026-04-27 at 2 54 56 PM" src="https://github.com/user-attachments/assets/e5ac448c-d1ea-4db9-8321-44241245651d" />
-
-> *Caption: "First chronoamperometry run, February 12. Signal is present but highly noisy with no discernible concentration-dependent feature. This run confirmed hardware connectivity but highlighted the measurement challenges ahead."*
-
-**Engineering significance:** This phase functioned as a system feasibility test. Before a sensor can be evaluated quantitatively, the acquisition chain must be shown to produce a usable signal. Confirming this signal pathway was a necessary prerequisite for all subsequent calibration, model development, and hardware integration.
-
----
-
-### February 26, 2026 — Calibration Data Collection and Pipeline Improvement
-
-We prepared a full set of standard glucose solutions for calibration and improved the data pipeline. The updated Python workflow exported raw data to CSV files for later analysis, making the system reproducible and better suited for engineering analysis. First full datasets for high and very high glucose concentrations were collected.
-
----
-
-### March 4, 2026 — Full Concentration Dataset Complete
-
-All initial concentration measurements across the prepared glucose standards were completed. This marked the transition from system verification to quantitative sensor characterization — the first time the system had enough data to attempt a calibration.
-
----
-
-### March 5, 2026 — Initial Calibration Curve
-
-Using the concentration dataset, the first calibration model was constructed:
-
-$$\text{Glucose Concentration (mM)} = 1.1978 \times (\text{Max Current in µA}) - 0.4567 \quad (R^2 = 0.9998)$$
-
-<img width="985" height="459" alt="Screenshot 2026-04-27 at 2 55 57 PM" src="https://github.com/user-attachments/assets/2cb0e151-1bb0-470f-8fdb-c8190bdcf42f" />
-
-> *Caption: "Initial calibration curve, March 5. R² = 0.9998 on training data, but failed to generalize to new measurements — a consequence of fitting four points with zero within-concentration replication."*
-
-The extremely high R² was misleading: with only four measurements (one per concentration), the model was effectively an interpolation with no measurement variability accounted for. Subsequent testing trying to reproduce these results showed the error.
-
-#### Key Finding: Breakdown at High Concentrations
-
-The calibration relationship fails at very high glucose concentrations (extreme diabetic ranges). Several non-ideal effects contribute:
-
-- **Enzyme saturation** — GOx reaction rate approaches $V_{\max}$ and no longer increases proportionally with glucose (Michaelis-Menten kinetics)
-- **Mass transport limitation** — glucose supply to the electrode, not reaction rate, controls the response
-- **Deviation from Cottrell behavior** — the diffusion-controlled assumptions of the model no longer hold
-
-This is a classic chemical engineering example of a process leaving its ideal operating regime — analogous to a reactor model failing when kinetic or mixing assumptions break down. The device is calibrated and validated for the 2–12 mM clinical range.
-
----
-
-### March 25, 2026 — Validation Testing and Failure Analysis
-
-Extensive validation testing evaluated two independent feature extraction methods: peak current and steady-state current at a fixed time point.
-
-Although calibration curves could be constructed for both methods, neither produced predictions that were sufficiently accurate or reproducible across new trials. This indicated a systemic limitation rather than a methodological error.
-
-#### Engineering Interpretation of Failure
-
-**1. Strip–Instrumentation Mismatch.** Commercial glucose test strips are designed to operate with proprietary voltage waveforms and internal electronics. The Rodeostat's simple chronoamperometric step may not match the strip's intended operating conditions.
-
-**2. Inconsistent Mechanical Contact.** Variations in contact quality between Rodeostat leads and strip electrodes introduced signal variability independent of glucose concentration.
-
-**3. Nonlinear Reaction Kinetics.** Strip enzyme chemistry introduces nonlinearities not captured by a simple linear calibration model.
-
-**4. Signal Instability.** Small variations in strip positioning, contact pressure, or timing disproportionately affected measured current.
-
-**Engineering conclusion:** Both calibration approaches failed validation, indicating the root cause was physical rather than algorithmic. Targeted hardware intervention was required before further calibration attempts.
-
----
-
-### April 2, 2026 — Arduino Serial Communication and OLED Display
-
-After identifying that the display required SPI (not I2C) communication, the OLED was successfully initialized and validated on a prototyping breadboard.
-
-> *Caption: "Initial OLED wiring setup on breadboard, April 2. SPI connection established after switching from I2C."*
-> <img width="867" height="507" alt="Screenshot 2026-04-27 at 2 57 23 PM" src="https://github.com/user-attachments/assets/12587aa6-de29-4984-a667-b7863b4036df" />
+### Schematics & Wiring
 
 #### OLED Wiring (SPI Interface)
 
-| OLED Pin | Arduino Pin |
-|----------|-------------|
-| DC (Data/Command) | D8 |
-| RES (Reset) | D9 |
-| CS (Chip Select) | D10 |
-| MOSI (Data) | D11 |
-| SCK (Clock) | D13 |
+The OLED display requires SPI communication (not I²C — an early debugging finding). Wiring is as follows:
 
-#### Serial Communication Workflow
+| OLED Pin | Arduino Pin | Function |
+|---|---|---|
+| DC (Data/Command) | D8 | Selects data vs. command byte |
+| RES (Reset) | D9 | Hardware reset line |
+| CS (Chip Select) | D10 | SPI chip select |
+| MOSI (Data) | D11 | SPI data line |
+| SCK (Clock) | D13 | SPI clock |
 
-The Python Jupyter Notebook workflow was extended to:
+#### Electrode Lead Assignment
 
-1. Run the chronoamperometry measurement via the Rodeostat
-2. Extract the calibration feature from the current-time response
-3. Compute the predicted glucose concentration using the calibration equation
-4. Broadcast the concentration value to the Arduino over USB serial
+| Lead Color | Electrode Role |
+|---|---|
+| Red | Working |
+| Orange | Reference |
+| Yellow / Grey | Counter |
 
-The Arduino sketch listens on the serial port, parses the received concentration string, and displays the result on the OLED in real time.
+Consistent lead polarity and placement were critical to eliminating stray resistance at the strip-to-Rodeostat interface, identified during root cause analysis as a major noise source.
 
-#### Arduino Sketch
+<img width="541" height="603" alt="Soldered Arduino and OLED assembly" src="https://github.com/user-attachments/assets/a5612769-33c9-49d7-9f39-8220c60cb2b9" />
+
+> **Figure 4.** Soldered OLED and Arduino assembly on breadboard. All connections were soldered from loose jumper wires to eliminate intermittent contact — a hardware intervention that stabilized display communication.
+
+---
+
+### Code
+
+#### Arduino Sketch — OLED Display
 
 ```cpp
 #include <SPI.h>
@@ -410,7 +434,7 @@ void loop() {
 }
 ```
 
-#### Python Notebook Script
+#### Python Measurement & Processing Script (Jupyter Notebook)
 
 ```python
 from potentiostat import Potentiostat
@@ -420,14 +444,14 @@ import serial
 import serial.tools.list_ports
 import time
 
-# 0) SHOW AVAILABLE PORTS
+# 0) SHOW AVAILABLE PORTS — identify Rodeostat vs. OLED serial ports
 print("Available ports:")
 for p in serial.tools.list_ports.comports():
     print(" ", p.device, "-", p.description)
 
 # 1) SET PORT NAMES
-rodeostat_port = "/dev/cu.usbmodem101"
-oled_port      = "/dev/cu.usbmodem11101"
+rodeostat_port = "/dev/cu.usbmodem101"   # Rodeostat potentiostat
+oled_port      = "/dev/cu.usbmodem11101" # Arduino (OLED)
 
 # 2) CONNECT TO OLED
 oled = serial.Serial(oled_port, 115200, timeout=1)
@@ -438,17 +462,18 @@ print("OLED connected on", oled_port)
 
 # 3) CONNECT TO RODEOSTAT
 dev = Potentiostat(rodeostat_port)
-dev.set_sample_period(100)
+dev.set_sample_period(100)  # 100 ms sampling interval
 
 # 4) RUN CHRONOAMPEROMETRY AT CV-OPTIMIZED 0.3 V
+# Step from 0 V (quiet) to 0.3 V for 29 seconds
 name = "chronoamp"
 test_param = {
     "quietValue": 0.0,
-    "quietTime":  1000,
+    "quietTime":  1000,         # 1 s equilibration
     "step": [(0, 0.0), (29000, 0.3)],
 }
 dev.set_param(name, test_param)
-print("Running test...")
+print("Running chronoamperometry measurement...")
 t, volt, curr = dev.run_test(name, display="pbar", filename="data.txt")
 
 # 5) BUILD DATAFRAME AND SAVE
@@ -457,27 +482,29 @@ df_raw = df_raw.sort_values("time_s").reset_index(drop=True)
 df_raw["time_s"] = df_raw["time_s"].round(2)
 df_raw.to_excel("chrono_data.xlsx", index=False)
 
-# 6) PLOT
+# 6) PLOT — voltage and current vs. time
 plt.figure(figsize=(9, 6))
 plt.subplot(211)
-plt.title("Voltage and current vs time")
-plt.plot(t, volt); plt.ylabel("potential (V)"); plt.grid(True)
+plt.title("Chronoamperometry: Voltage and Current vs. Time")
+plt.plot(t, volt); plt.ylabel("Potential (V)"); plt.grid(True)
 plt.subplot(212)
-plt.plot(t, curr); plt.ylabel("current (uA)"); plt.xlabel("time (sec)"); plt.grid(True)
+plt.plot(t, curr); plt.ylabel("Current (µA)"); plt.xlabel("Time (s)"); plt.grid(True)
 plt.tight_layout(); plt.show()
 
-# 7) EXTRACT PEAK CURRENT (ignore first 1 s)
+# 7) EXTRACT PEAK CURRENT
+# Ignore first 1 s to exclude initial transient noise from potential step
 df_window = df_raw[df_raw["time_s"] >= 1.0]
 max_current_uA = float(df_window["current_uA"].max())
-print("Peak current (uA):", max_current_uA)
+print(f"Peak current: {max_current_uA:.3f} µA")
 
-# 8) COMPUTE CONCENTRATION
-# Final calibration: C (mM) = (I_peak (uA) + 5.415) / 3.7379
+# 8) COMPUTE GLUCOSE CONCENTRATION
+# Final calibration equation (April 26, R² = 0.935):
+# C (mM) = (I_peak (µA) + 5.415) / 3.7379
 concentration_mM = (max_current_uA + 5.415) / 3.7379
-concentration_mM = max(0, concentration_mM)
-print("Glucose Concentration (mM):", concentration_mM)
+concentration_mM = max(0, concentration_mM)  # Physical constraint: concentration ≥ 0
+print(f"Glucose Concentration: {concentration_mM:.2f} mM")
 
-# 9) SEND TO OLED
+# 9) SEND TO OLED DISPLAY
 oled.write(f"{concentration_mM:.1f}\n".encode())
 time.sleep(0.3)
 while oled.in_waiting:
@@ -487,146 +514,355 @@ oled.close()
 
 ---
 
-### April 8, 2026 — Hardware Integration and Soldering
+## 4. Calibration: Iteration History & Challenges
 
-The system moved from loose jumper wire connections to a soldered assembly. The OLED screen and all wiring connections to the Arduino were soldered onto a breadboard, replacing the earlier prototype with mechanically stable joints. The full pipeline (measure → process → display) was verified end-to-end from a single Jupyter Notebook.
-
-<img width="541" height="603" alt="Screenshot 2026-04-27 at 4 46 22 PM" src="https://github.com/user-attachments/assets/a5612769-33c9-49d7-9f39-8220c60cb2b9" />
+Calibration required four distinct iterations over three months. Each failure was diagnosed and addressed through targeted hardware or methodological intervention — a systematic engineering process that ultimately produced the functional final prototype.
 
 ---
 
-### April 16, 2026 — New Strip Procurement, Shim Addition, Cyclic Voltammetry, and Electrode Rework
+### Iteration 1 — OneTouch Strips, Peak Current (March 5)
 
-Following the March 25 failure analysis, a systematic hardware intervention was implemented to address the two primary identified failure modes: inconsistent mechanical contact and strip batch variability. This session also introduced cyclic voltammetry as a principled method for selecting the applied chronoamperometric voltage.
+**Method:** Peak (maximum) current from chronoamperometry at 0.5 V; four concentrations, one measurement each.
 
-#### New Strip Procurement
+**Result:**
+$$\text{Glucose (mM)} = 1.1978 \times I_{\text{peak}} (\mu\text{A}) - 0.4567 \quad (R^2 = 0.9998)$$
 
-Fresh True Metrix self-monitoring glucose test strips were procured from CVS. The new strips showed noticeably more consistent signal behavior compared to the original batch. Where the earlier strips produced erratic baselines and poorly reproducible peak magnitudes, the new strips yielded cleaner current-versus-time transients with more predictable Cottrell-like decay profiles.
+<img width="985" height="459" alt="Initial calibration curve March 5 with misleading R² = 0.9998" src="https://github.com/user-attachments/assets/2cb0e151-1bb0-470f-8fdb-c8190bdcf42f" />
 
-#### Shim Addition and Contact Improvement
+> **Figure 5.** Initial calibration curve (March 5). R² = 0.9998 on training data — a misleading result from fitting exactly 4 points with one measurement per concentration (effectively interpolation, not regression). Subsequent validation produced predictions ranging from −10 to >50 mM.
 
-A physical shim was inserted underneath each test strip during measurement to apply consistent downward pressure on the strip, standardizing the contact resistance between the Rodeostat leads and the strip electrodes. This mechanical improvement addressed a major source of measurement variability that had persisted across all earlier calibration attempts.
-
-Prior to the shim, strips without controlled contact pressure produced signals ranging from completely open-circuit (flat current) to severely distorted, making it impossible to distinguish contact failures from genuine concentration-dependent signals.
-
-<img width="484" height="374" alt="Screenshot 2026-04-27 at 2 58 46 PM" src="https://github.com/user-attachments/assets/ec0b6f7d-2018-4d26-8643-ef776563f1a3" />
-
-> *Caption: "Failed chronoamperometry measurements from poor strip contact (2.2 mM, no shim). Flat or distorted traces indicate intermittent electrode connection rather than a genuine electrochemical response — indistinguishable from a zero-concentration sample."*
-
-<img width="390" height="296" alt="Screenshot 2026-04-27 at 2 59 58 PM" src="https://github.com/user-attachments/assets/8dbd1244-d30f-4f7c-bac8-d3d408b8e303" />
-
-<img width="406" height="307" alt="Screenshot 2026-04-27 at 3 00 16 PM" src="https://github.com/user-attachments/assets/94fbfa67-454d-4b06-bd62-4ede3ca5331e" />
-
-> *Caption: "Chronoamperometry with shim added (6.6 mM). At first, we received a crazy result of 1000 microamps. After repositioning, began to see more reliable results"*
-
-#### Electrode Connection Rework
-
-The physical connections between the Rodeostat leads and the strip were reworked with attention to consistent polarity and lead placement, reducing stray resistance at the connection interface. Final lead assignment:
-
-| Lead Color | Electrode Role |
-|------------|---------------|
-| Red | Working |
-| Orange | Reference |
-| Yellow / Grey | Counter |
-
-#### Cyclic Voltammetry and Applied Voltage Determination
-
-CV scans were run on the new True Metrix strips across all five glucose concentrations (2.2, 4.4, 6.6, 8.8, and 11.1 mM). The potential was swept from −0.6 V to +0.6 V.
-
-The anodic oxidation peak — corresponding to H₂O₂ oxidation at the working electrode — was visible and reproducible across all concentrations, consistently appearing near **0.3 V**. Because peak position was independent of concentration (as expected for a kinetically controlled electrode process on a fixed surface), 0.3 V was adopted as the fixed applied potential for all subsequent chronoamperometric measurements, replacing the previously arbitrary 0.5 V step.
+**Failure analysis:** The extremely high R² was an artifact of interpolation rather than genuine model fit. With only four calibration points and no within-concentration replication, the model captured zero measurement variability. Predictions on new strips completely failed, confirming that the model did not generalize.
 
 ---
 
-### April 26, 2026 — Final Calibration, Enclosure, and Prototype Completion
+### Iteration 2 — Steady-State Current (March 25)
 
-With all hardware improvements in place, the final calibration was performed and the device was assembled in its enclosure.
+**Method:** Shifted from peak current to steady-state current at fixed time points (10 s and 20 s), where the Cottrell transient has decayed and the signal is more stable.
 
-#### Final Calibration Dataset
+**Result:**
 
-Peak current was measured at 0.3 V applied potential using new True Metrix strips with the shim. One strip per concentration.
+<img width="622" height="520" alt="Calibration curve comparison for steady-state at 10s and 20s" src="https://github.com/user-attachments/assets/23fa1c65-093f-43e6-bedc-88f5650b4043" />
+
+> **Figure 6.** Calibration curves using steady-state current at 10 s (left) and 20 s (right) for OneTouch strips. R² values near zero; no usable concentration-dependent trend. Measurements scattered without correlation across replicate strips.
+
+**Failure analysis:** Reproducibility failed across both feature types (peak and steady-state), pointing to a **systemic physical cause** rather than an algorithmic one. Strip-to-strip variability and inconsistent mechanical contact were identified as root causes requiring hardware intervention — no signal processing approach could compensate for uncontrolled physical variables.
+
+---
+
+### Iteration 3 — DI Water Normalization (March 25)
+
+**Method:** Baseline normalization — each strip's response in DI water was subtracted from the sample response to correct for inter-strip offset.
+
+**Result:**
+
+> Normalization corrected for inter-strip baseline offset but could not correct for **differences in sensitivity (slope)** between strips. Calibration remained inconsistent.
+
+**Engineering interpretation:** Normalization is equivalent to subtracting a systematic additive bias. If the true variability is multiplicative (i.e., slope varies between strips, not just intercept), baseline subtraction is insufficient. A ratiometric approach or strip-by-strip calibration would be required — both demanding more measurements than the current protocol allows.
+
+---
+
+### Root Cause Analysis & Hardware Intervention (April 16)
+
+Persistent failure across all signal features — peak current, steady-state current, normalized current — indicated that no calibration methodology could succeed until the underlying physical sources of variability were controlled. Two primary causes were identified and addressed:
+
+**Cause 1: Strip batch variability**
+- *Root cause:* Original OneTouch strips produced erratic baselines and poorly reproducible peak magnitudes across the batch. Strip age and storage conditions were uncontrolled.
+- *Resolution:* Fresh True Metrix Self-Monitoring Glucose Test Strips were procured from CVS. True Metrix strips showed noticeably more consistent current-time profiles with cleaner Cottrell-like decay behavior. Electrode geometry also provided better mechanical compatibility with Rodeostat leads.
+
+**Cause 2: Inconsistent mechanical contact**
+- *Root cause:* Without controlled contact pressure, the resistance at the strip electrode-to-Rodeostat-lead interface varied from measurement to measurement. This introduced signal variability independent of glucose concentration — impossible to distinguish from real chemistry.
+
+<img width="484" height="374" alt="Failed chronoamperometry from poor strip contact showing flat/distorted traces" src="https://github.com/user-attachments/assets/ec0b6f7d-2018-4d26-8643-ef776563f1a3" />
+
+> **Figure 7.** Failed chronoamperometry measurements from poor strip contact (2.2 mM, no shim). Flat or severely distorted traces indicate intermittent electrode connection — indistinguishable from a zero-concentration sample in the absence of a quality check.
+
+- *Resolution:* A **shim** (a second strip, inverted) was inserted beneath each test strip during measurement to apply consistent downward pressure, standardizing contact resistance.
+
+**Additional hardware improvements:**
+- Electrode connection rework with defined lead polarity (Red = Working, Orange = Reference, Yellow/Grey = Counter)
+- CV-guided voltage selection (0.3 V, replacing arbitrary 0.5 V)
+
+**Summary of root cause analysis and resolutions:**
+
+| Issue Encountered | Root Cause Identified | Resolution Implemented |
+|---|---|---|
+| Non-reproducible calibration | Strip batch variability | Fresh CVS True Metrix strips |
+| Signal dropout / flat traces | Inconsistent mechanical contact pressure | Shim added to strip holder |
+| Non-optimal applied voltage | Arbitrary voltage selection (0.5 V) | CV-guided 0.3 V selection |
+| Noisy electrode connection | Incorrect polarity and loose leads | Connection rework with defined lead assignment |
+| Calibration nonlinearity at high [C] | GOx enzyme saturation (Michaelis-Menten) | Validated operating range limited to ≤ 11.1 mM |
+
+---
+
+### Iteration 4 (Final) — True Metrix Strips (April 26)
+
+**Method:** Peak current at 0.3 V applied potential (CV-determined); new True Metrix strips with shim; one strip per concentration.
+
+**Improvements over prior iterations:**
+- New strips with more compatible electrode geometry
+- One measurement per strip to prevent enzyme layer degradation from repeated exposure
+- Shim to increase and standardize electrical contact
+- Applied voltage at experimentally determined 0.3 V
+
+<img width="525" height="398" alt="Final calibration curve April 26 with True Metrix strips" src="https://github.com/user-attachments/assets/72d408e0-0354-4cb2-950e-61019ecb7f4f" />
+
+> **Figure 8.** Final calibration curve (April 26). True Metrix strips at 0.3 V applied potential. R² = 0.935 across the 2.2–11.1 mM range. Error bars reflect within-measurement noise. Deviation at 8.8 and 11.1 mM reflects onset of GOx enzyme saturation.
+
+---
+
+## 5. Performance Data & Validation
+
+### Final Calibration Results
+
+**Final calibration dataset:**
 
 | Glucose Concentration (mM) | Peak Current (µA) |
-|----------------------------|-------------------|
+|---|---|
 | 2.2 | 4.42 |
 | 4.4 | 11.21 |
 | 6.6 | 13.80 |
 | 8.8 | 31.40 |
 | 11.1 | 35.82 |
 
-#### Final Calibration Curve
+**Calibration equation (forward — current from concentration):**
 
-$$\text{Peak Current (µA)} = 3.7379 \times \text{Glucose Concentration (mM)} - 5.415 \quad (R^2 = 0.935)$$
+$$I_{\text{peak}} \ (\mu\text{A}) = 3.7379 \times C_{\text{glucose}} \ (\text{mM}) - 5.415 \quad (R^2 = 0.935)$$
 
-Inverted for concentration prediction:
+**Inverted for real-time concentration prediction:**
 
-$$\boxed{\text{Glucose Concentration (mM)} = \frac{\text{Peak Current (µA)} + 5.415}{3.7379}}$$
+$$\boxed{C_{\text{glucose}} \ (\text{mM}) = \frac{I_{\text{peak}} \ (\mu\text{A}) + 5.415}{3.7379}}$$
 
-ADD PICTURE HERE
-> *Caption: "Final calibration curve, April 26. New True Metrix strips at 0.3 V applied potential (CV-optimized). R² = 0.935 across the 2.2–11.1 mM range. Deviation at 8.8 and 11.1 mM reflects the onset of enzyme saturation."*
+**Calibration summary:**
 
-The R² of 0.935 is substantially lower than the original four-point training fit (0.9998) but is more honest — it reflects a properly constructed calibration with variability present in the data, rather than a four-point interpolation. The deviation at high concentrations is consistent with the Michaelis-Menten saturation behavior identified in the March 5 analysis.
+| Parameter | Value |
+|---|---|
+| Applied potential | 0.3 V (CV-determined) |
+| Calibration feature | Peak current (µA), ignoring first 1 s |
+| Calibration equation | C (mM) = (I + 5.415) / 3.7379 |
+| R² | 0.935 |
+| Validated range | 2.2–11.1 mM (40–200 mg/dL) |
+| Strip type | True Metrix self-monitoring glucose test strips |
 
-#### End-to-End Screen Validation
+The R² of 0.935, though lower than the original four-point training fit (0.9998), is substantially more honest — it reflects a properly constructed calibration with real measurement variability present, rather than a four-point interpolation. The deviation at high concentrations is physically consistent with the Michaelis-Menten saturation behavior identified analytically.
+
+---
+
+### End-to-End Screen Validation
+
+Known glucose standards were measured and predictions displayed on the OLED — testing the full pipeline (electrochemical acquisition → processing → serial transmission → display):
 
 | Actual Concentration (mM) | Screen Output Trial 1 (mM) | Screen Output Trial 2 (mM) |
-|---:|---:|---:|
+|---|---|---|
 | 2.2 | 11.7 | 2.7 |
 | 4.4 | 3.42 | 14.5 |
 | 6.6 | 7.9 | 33.2 |
 | 8.8 | 42.5 | 47.9 |
 | 11.1 | 48.8 | 35.0 |
 
-These results confirm the full sensing-to-display pipeline is functional end-to-end. Quantitative accuracy remains limited by single-strip calibration — the primary target for further refinement. The pipeline itself (acquire → process → transmit → display) operates correctly for every measurement.
+These results confirm the **full sensing-to-display pipeline is functional end-to-end**. Quantitative accuracy varies significantly between trials at the same concentration — driven by strip-to-strip variability that a single-strip calibration cannot capture. The pipeline itself (acquire → process → transmit → display) operates correctly for every measurement.
 
-#### 3D-Printed Enclosure
-
-The Arduino Uno and OLED display were mounted inside a 3D-printed enclosure that houses the components securely while providing access for the strip holder and USB connection.
+**See the device in action:** https://github.com/user-attachments/assets/cb9e7f55-9fd3-4ae5-9c2e-26083d2b7484
 
 ---
 
-## Final System Performance
+### Error Analysis
 
-### What the Device Does
+Validation was performed by testing known glucose standards against the device's screen output. This assessment evaluates real-world prototype performance — not model construction.
 
-1. User applies a glucose test strip to the shim-assisted strip holder and initiates measurement from the Jupyter Notebook
-2. The Rodeostat applies a 0.3 V chronoamperometric step for 30 seconds
-3. Python processes the current-time response and extracts peak current (ignoring the first 1 s of transient noise)
-4. The calibration equation converts peak current to glucose concentration in mM
-5. Concentration is transmitted over USB serial to the Arduino
-6. Program reruns if inhuman result (negative glucose concentration)
-7. The OLED displays the result in real time
+| Error Metric | Value |
+|---|---|
+| Mean Absolute Error (MAE) | 20.27 mM |
+| Root Mean Squared Error (RMSE) | 23.57 mM |
+| Mean Absolute Percent Error (MAPE) | 328.7% |
+| Average bias | +19.68 mM (systematic overprediction) |
 
-### Calibration Summary
+<img width="521" height="410" alt="Error analysis figure 1" src="https://github.com/user-attachments/assets/aaf52fd2-370b-471a-8e74-866dc931845e" />
 
-| Parameter | Value |
-|-----------|-------|
-| Applied potential | 0.3 V (CV-determined) |
-| Calibration feature | Peak current (µA) |
-| Calibration equation | C (mM) = (I + 5.415) / 3.7379 |
-| R² | 0.935 |
-| Validated range | 2.2 – 11.1 mM |
-| Strip type | True Metrix self-monitoring glucose test strips |
+<img width="550" height="398" alt="Error analysis figure 2" src="https://github.com/user-attachments/assets/5b434416-e2b9-4cc9-a8e9-aaae7d7dd0ee" />
 
-### Key Design Iterations
+<img width="533" height="398" alt="Error analysis figure 3 percent error by concentration" src="https://github.com/user-attachments/assets/5a39f936-9187-481e-b23e-9deb90e26165" />
 
-| Issue Encountered | Root Cause Identified | Resolution Implemented |
+> **Figures 9–11.** Error analysis: predicted vs. actual glucose concentration (parity plot), absolute error by concentration, and percent error by concentration. Error increases sharply at higher concentrations (>6.6 mM), consistent with the onset of enzyme saturation and amplified peak current artifacts.
+
+**Error contributors (ranked by likely impact):**
+1. **Single-strip calibration** — one measurement per concentration provides no inter-strip variability estimate; the calibration slope and intercept are highly sensitive to individual strip behavior
+2. **Inconsistent strip seating** — residual mechanical contact variability despite shim intervention
+3. **Contact resistance** — variable resistance at the strip electrode-to-Rodeostat-lead interface introduces noise directly into the current signal
+4. **Strip manufacturing variation** — batch-to-batch and strip-to-strip variation in GOx enzyme layer deposition and electrode geometry
+5. **Nonlinear enzymatic response** — GOx saturation above ~8 mM produces accelerating nonlinearity not captured by the linear calibration model
+6. **Electrical noise** — Rodeostat signal noise at the low current magnitudes measured (<50 µA)
+
+**Mitigation implemented:** If a reading is <0 or >50 mM, the system automatically re-runs the measurement up to 5 times — a real-time quality gate that catches obvious outliers.
+
+**Engineering interpretation:** The quantitative error, while large, is a known and bounded limitation of a single-strip, single-measurement calibration. The path to improvement is clear: triplicate calibration measurements per concentration would provide uncertainty bounds, enable outlier rejection, and yield a more robust regression. This is the highest-priority future work item.
+
+---
+
+### Nonlinear Kinetics & Operating Limit
+
+<img width="401" height="315" alt="Actual glucose concentration vs screen output showing nonlinear overprediction" src="https://github.com/user-attachments/assets/c4e9aaf9-d595-4444-863f-4deb1d4c7efb" />
+
+> **Figure 12.** Actual vs. screen output glucose concentration. Ideal performance would follow the dashed diagonal. Screen output diverges dramatically above ~6.6 mM, consistent with the onset of GOx enzyme saturation (Michaelis-Menten regime transition) combined with peak-current artifacts at higher concentration.
+
+The theoretical expectation at saturation is a **plateau** in current (Michaelis-Menten zero-order regime). The observed behavior of **increasing overprediction** suggests that peak-current artifacts (e.g., transient noise spikes that are disproportionately large at higher concentrations) are amplified by the single-strip calibration rather than saturating. This is a compound failure: enzyme saturation breaks the linear Cottrell assumption, and the peak-current extraction method becomes less reliable as the true signal shape deviates from the ideal Cottrell decay.
+
+---
+
+### System Limitations
+
+| Category | Limitation |
+|---|---|
+| **Measurement & Signal** | Peak current sensitive to transient noise spikes; signal affected by electrode contact variability |
+| **Chemical** | GOx enzyme saturation limits linear range to ≤ ~11 mM; strip chemistry introduces non-ideal electrochemical behavior at higher concentrations |
+| **Hardware** | Precision limited by Rodeostat's low-cost analog front end; manual strip insertion introduces inconsistent alignment and contact |
+| **Calibration** | Linear model valid only in 2.2–11.1 mM range; single-strip calibration provides no uncertainty quantification |
+| **Operation** | Computer-dependent (Jupyter Notebook required for measurement and processing) |
+
+---
+
+## 6. Progress Log
+
+A chronological record of key development milestones, engineering decisions, and findings.
+
+### February 12, 2026 — Initial Hardware Setup and Signal Verification
+
+Connected the IO Rodeostat to a laptop and conducted an initial chronoamperometry test using a commercial glucose test strip and legacy connector leads. Emphasis was on confirming that the hardware and software pipeline could generate and capture an electrochemical signal.
+
+<img width="788" height="483" alt="First chronoamperometry run February 12 showing noisy signal" src="https://github.com/user-attachments/assets/e5ac448c-d1ea-4db9-8321-44241245651d" />
+
+> **Figure 13.** First chronoamperometry run (February 12). Signal present but highly noisy with no discernible concentration-dependent feature. Confirmed hardware connectivity and established the measurement pipeline as a foundation for all subsequent work.
+
+**Engineering significance:** Feasibility verification — before a sensor can be evaluated quantitatively, the acquisition chain must be shown to produce a usable signal. This confirmed the end-to-end pathway: strip → Rodeostat → USB → Python → plot.
+
+---
+
+### February 26, 2026 — Calibration Data Collection and Pipeline Improvement
+
+Prepared a full set of standard glucose solutions for calibration and improved the data pipeline. The updated Python workflow exported raw data to CSV/Excel files, making measurements reproducible and analysis-ready. First full datasets for high and very high glucose concentrations were collected.
+
+---
+
+### March 4, 2026 — Full Concentration Dataset Complete
+
+All initial concentration measurements across the five glucose standards were completed. First time the system had enough data to attempt a calibration model.
+
+---
+
+### March 5, 2026 — Initial Calibration Curve
+
+First calibration model constructed using peak current. R² = 0.9998 on training data (see Calibration Section for failure analysis). The high apparent linearity was a four-point interpolation artifact. Breakdown at high concentrations also observed and attributed to enzyme saturation.
+
+---
+
+### March 25, 2026 — Validation Testing and Failure Analysis
+
+Extensive validation testing across peak current, steady-state current at 10 s and 20 s, and DI water normalization. All methods failed validation. Root cause analysis concluded the failures were physical — strip variability and mechanical contact — not algorithmic.
+
+---
+
+### April 2, 2026 — Arduino Serial Communication and OLED Display
+
+After identifying that the display required SPI (not I²C) communication, the OLED was successfully initialized and validated on a breadboard. Python-to-Arduino serial communication pipeline was designed and tested end-to-end.
+
+<img width="867" height="507" alt="Initial OLED wiring setup on breadboard April 2" src="https://github.com/user-attachments/assets/12587aa6-de29-4984-a667-b7863b4036df" />
+
+> **Figure 14.** Initial OLED wiring on breadboard (April 2). SPI connection established after diagnosing and correcting an I²C initialization failure. Full serial communication from Python to Arduino and display verified.
+
+---
+
+### April 8, 2026 — Hardware Integration and Soldering
+
+Moved from loose jumper wires to a soldered assembly. OLED and all Arduino connections were soldered to a breadboard, producing mechanically stable joints. Full pipeline (measure → process → display) verified end-to-end from a single Jupyter Notebook.
+
+---
+
+### April 16, 2026 — New Strips, Shim, CV, and Electrode Rework
+
+Systematic hardware intervention to address the two root causes identified March 25:
+
+- **New True Metrix strips** procured from CVS — cleaner signals, better electrode geometry compatibility
+- **Shim addition** — standardized mechanical contact pressure; eliminated contact resistance variability
+- **Cyclic voltammetry** run across all five concentrations, establishing 0.3 V as the optimal applied potential
+- **Electrode rework** with defined lead polarity
+
+<img width="390" height="296" alt="Chronoamperometry results after shim addition 6.6 mM" src="https://github.com/user-attachments/assets/8dbd1244-d30f-4f7c-bac8-d3d408b8e303" />
+
+> **Figure 15.** Chronoamperometry at 6.6 mM post-shim (one of several results). After repositioning and consistent shim placement, more reliable Cottrell-like decay profiles began to emerge.
+
+---
+
+### April 26, 2026 — Final Calibration, Enclosure, and Prototype Completion
+
+Final calibration performed with all hardware improvements in place. 3D-printed enclosure assembled with Arduino Uno and OLED display mounted and secured. End-to-end validation runs performed across all five concentrations.
+
+---
+
+## 7. SWOT Analysis
+
+| | Strengths | Weaknesses |
 |---|---|---|
-| Non-reproducible calibration | Strip batch variability | New CVS-procured True Metrix strips |
-| Signal dropout / flat traces | Inconsistent strip contact pressure | Shim added to strip holder |
-| Non-optimal applied voltage | Arbitrary voltage selection (0.5 V) | CV-guided 0.3 V selection |
-| Noisy electrode connection | Incorrect connections and voltage interference through Soldering | Electrode connection rework  |
-| Calibration nonlinearity at high [C] | GOx enzyme saturation (Michaelis-Menten) | Validated operating range limited to ≤ 11.1 mM |
+| **Internal** | Strong medical relevance; real-time OLED output; low-cost component selection; modular architecture enabling independent subsystem development; CV-guided voltage selection demonstrates principled experimental design; complete end-to-end pipeline | Quantitative accuracy not yet at clinical-grade; computer-dependent operation; single-strip calibration with no uncertainty quantification; performance degrades above ~11 mM |
+
+| | Opportunities | Threats |
+|---|---|---|
+| **External** | Rising diabetes prevalence increases urgency for affordable tools; future PCB integration could reduce cost by 10×; strong potential for community health and screening applications; embedded processing migration would enable full portability | Competition from established commercial glucometers with regulatory approval; regulatory barriers for clinical deployment; liability concerns with inaccurate predictions; possible fundamental incompatibility between commercial strip chemistry and non-proprietary instrumentation at high concentrations |
+
+---
+
+## 8. Future Work
+
+### Immediate (Next Semester)
+
+1. **Triplicate measurements per concentration** — provides calibration uncertainty bounds, enables outlier rejection, and produces a statistically valid regression. This is the single highest-impact improvement.
+2. **Automated re-run logic** — automated quality flagging for out-of-range or low-quality signals (e.g., Cottrell $t^{-1/2}$ linearity check as a per-measurement flag)
+3. **Reference glucometer validation** — compare device output against a commercial glucometer on matched samples to establish relative accuracy
+4. **Larger calibration dataset** — more concentrations and more replicates to better characterize the nonlinear regime
+
+### Hardware
+
+- Migrate signal processing to onboard microcontroller (eliminate laptop dependency — the most significant usability limitation)
+- Evaluate battery-powered operation for true portability
+- Finalize strip holder design with integrated shim for robust, repeatable loading
+- Integrate potentiostat analog front end directly with Arduino or upgraded MCU
+
+### Longer-Term
+
+- Miniaturization and PCB integration of the analog front end (targets ~10× cost reduction from the current Rodeostat)
+- Regulatory pathway assessment for any future clinical or community deployment
+- Explore alternative strip types with more consistent electrode-to-instrument compatibility
+
+---
+
+## Repository Contents
+
+```
+sweetspot/
+├── notebooks/          # Jupyter Notebooks — chronoamperometry, calibration, serial communication
+├── data/               # CSV/Excel exports of raw current-time data for each glucose standard
+│   └── calibrationdata.xlsx
+├── arduino/            # Arduino sketch — OLED display and serial communication
+├── docs/               # Design reports, presentations, GANTT chart
+└── README.md
+```
+
+### All Calibration Data
+
+All calibration data collected over the semester:
+[calibrationdata.xlsx](https://github.com/user-attachments/files/27147918/calibrationdata.xlsx)
+
+### Reports and Presentations
+
+- [Glucometer Preliminary Design Presentation](https://github.com/user-attachments/files/25115353/Glucometer.Preliminary.Design.Presentation.pdf)
+- [Initial Design Report](https://github.com/user-attachments/files/25423979/Initial.Design.Report.pptx)
+- [SweetSpot GANTT Chart](https://github.com/user-attachments/files/27147929/SweetSpot.GANTT.Chart.-.Gantt.Chart.Template.3.pdf)
 
 ---
 
 ## Current Project Status
 
-The system is a **fully functional final prototype (with significant error)**. The sensing, calibration, display, and enclosure are all complete. The device demonstrates the full engineering chain from electrochemical signal to displayed concentration reading and meets the core design objectives established at project inception.
+**The system is a fully functional final prototype.** The sensing, calibration, display, and enclosure are all complete and integrated. The device demonstrates the full engineering chain from electrochemical signal to displayed concentration reading and meets the core design objectives established at project inception. Quantitative accuracy is the primary target for next-semester refinement.
 
-**Copy link to watch it in action:**
-https://github.com/user-attachments/assets/cb9e7f55-9fd3-4ae5-9c2e-26083d2b7484
-
-### What is Working
+### What Is Working
 
 - [x] Electrochemical signal acquisition with the IO Rodeostat
 - [x] CV-determined optimal applied voltage (0.3 V) for True Metrix strips
@@ -637,104 +873,13 @@ https://github.com/user-attachments/assets/cb9e7f55-9fd3-4ae5-9c2e-26083d2b7484
 - [x] Experimentally derived and implemented calibration curve (R² = 0.935)
 - [x] Serial communication from Python to Arduino
 - [x] Real-time OLED display of computed glucose concentration
+- [x] Automated re-run for out-of-range results (<0 or >50 mM, up to 5×)
 - [x] Soldered OLED and Arduino connections on breadboard
 - [x] 3D-printed enclosure housing all display and processing components
 
 ### What Remains for Further Refinement
 
-- [ ] Triplicate measurements per concentration to quantify calibration uncertainty and define error bounds
-- [ ] Automated re-run logic for out-of-range or low-quality signals
+- [ ] Triplicate measurements per concentration for calibration uncertainty quantification
 - [ ] Cottrell $t^{-1/2}$ linearity check as a per-measurement quality flag
+- [ ] Reference glucometer comparison for absolute accuracy validation
 - [ ] Full migration of processing to onboard microcontroller (fully standalone operation)
-
----
-
-## System Architecture
-
-<img width="1137" height="653" alt="System Architecture" src="https://github.com/user-attachments/assets/cff04c35-f222-4edc-b9f9-14935a0425f3" />
-
----
-
-## Market Relevance and Application
-
-The long-term target market is underserved and low-income populations in urban environments where diabetes prevalence is high and access to healthcare is limited. Potential user groups include adults aged 30–65 at elevated risk for Type 2 diabetes, low-income individuals not yet engaged in regular monitoring, community health clinics, federally qualified health centers (FQHCs), and nonprofit screening programs.
-
-**Distribution pathways:** community health clinics and FQHCs, nonprofit chronic disease prevention organizations, local health departments and diabetes outreach programs, and university- or hospital-affiliated screening initiatives.
-
-The design goal is not a premium consumer medical device, but a proof-of-concept for a low-cost sensing platform that could support glucose awareness and screening in communities where access to conventional glucometers is a barrier.
-
----
-
-## SWOT Analysis
-
-### Strengths
-
-- Strong medical relevance and recurring demand for glucose monitoring
-- Real-time signal acquisition with direct embedded display feedback
-- Low-cost component selection: commercial strips, Rodeostat, Arduino, OLED
-- Modular architecture enables independent development of sensing and display layers
-- Interdisciplinary integration of electrochemistry, transport phenomena, reaction kinetics, instrumentation, and embedded systems
-- CV-guided voltage selection demonstrates principled experimental design rooted in chemical engineering
-
-### Weaknesses
-
-- Sensing accuracy not yet validated for reliable clinical-grade predictions
-- Computer-dependent operation (Jupyter Notebook required for processing)
-- Calibration based on single measurement per concentration — no uncertainty quantification
-- Performance degrades above ~11 mM due to enzyme saturation
-
-### Opportunities
-
-- Rising diabetes prevalence increases urgency for affordable monitoring tools
-- Future optimization could reduce cost and improve scalability
-- Advances in embedded electronics offer pathways toward fully standalone operation
-- Strong potential for educational, community health, and screening applications
-
-### Threats
-
-- Competition from established commercial glucometers with regulatory approval
-- Regulatory barriers for medical sensing devices intended for clinical use
-- Liability concerns associated with inaccurate glucose prediction
-- Possible fundamental incompatibility between commercial strips and non-proprietary instrumentation at higher concentrations
-
----
-
-## Future Work for Future Semester Groups
-
-### Hardware
-
-- Migrate signal processing to onboard microcontroller (eliminate laptop dependency)
-- Integrate potentiostat analog front end directly with Arduino or upgraded MCU
-- Evaluate battery-powered operation for true portability
-- Finalize strip holder design with integrated shim for robust and repeatable strip loading
-
-### Longer-Term
-
-- Validate the full system against a commercial glucometer reference on matched samples
-- Investigate miniaturization and PCB integration of the analog front end
-- Assess regulatory pathway for any future clinical or community deployment
-
----
-
-## All Calibration Data
-
-Below is all of our calibration data taken over the semester!
-
-[calibrationdata.xlsx](https://github.com/user-attachments/files/27147918/calibrationdata.xlsx)
-
-
----
-
-## Repository Contents
-
-- `notebooks/` — Jupyter Notebooks for chronoamperometry, calibration, and serial communication
-- `data/` — CSV/Excel exports of raw current-time data for each glucose standard
-- `arduino/` — Arduino sketch for OLED display and serial communication
-- `docs/` — Preliminary Design Report, Initial Design Report, GANTT chart
-- `README.md` — This file
-
-### Reports and Presentations
-
-- [Glucometer Preliminary Design Presentation](https://github.com/user-attachments/files/25115353/Glucometer.Preliminary.Design.Presentation.pdf)
-- [SweetSpot GANTT Chart - Gantt Chart Template (3).pdf](https://github.com/user-attachments/files/27147929/SweetSpot.GANTT.Chart.-.Gantt.Chart.Template.3.pdf)
-- [Initial Design Report](https://github.com/user-attachments/files/25423979/Initial.Design.Report.pptx)

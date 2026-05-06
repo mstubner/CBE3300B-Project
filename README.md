@@ -960,7 +960,8 @@ All calibration data collected over the semester:
 - [Glucometer Preliminary Design Presentation](https://github.com/user-attachments/files/25115353/Glucometer.Preliminary.Design.Presentation.pdf)
 - [Initial Design Report](https://github.com/user-attachments/files/25423979/Initial.Design.Report.pptx)
 - [SweetSpot GANTT Chart](https://github.com/user-attachments/files/27147929/SweetSpot.GANTT.Chart.-.Gantt.Chart.Template.3.pdf)
-- [SweetSpot Final Design Presentation.pdf](https://github.com/user-attachments/files/27409406/SweetSpot.Final.Design.Presentation.pdf)
+- [SweetSpot Final Design Report.pptx](https://github.com/user-attachments/files/27449603/SweetSpot.Final.Design.Report.pptx)
+
 
 
 ---

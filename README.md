@@ -766,7 +766,7 @@ These results confirm the **full sensing-to-display pipeline is functional end-t
 
 **See the device in action:** https://github.com/user-attachments/assets/cb9e7f55-9fd3-4ae5-9c2e-26083d2b7484
 
-**Full function video can be found in the Final Design Presentation in slide 36. The file is too large for this repository to accomodate!**
+**Full function video!** https://drive.google.com/file/d/17529kVom23vIuxYyKV71NutiktK6czey/view?usp=sharing
 
 ---
 

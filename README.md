@@ -37,6 +37,7 @@ The device demonstrates an end-to-end engineering chain: electrochemical sensing
   - [Preliminary Performance Calculations](#preliminary-performance-calculations)
   - [Schematics & Wiring](#schematics--wiring)
   - [Code](#code)
+  - [3D Printed Enclosure](#3D-printed-enclosure)
 - [Calibration: Iteration History & Challenges](#4-calibration-iteration-history--challenges)
   - [Iteration 1 — OneTouch Strips, Peak Current](#iteration-1--onetouch-strips-peak-current)
   - [Iteration 2 — Steady-State Current](#iteration-2--steady-state-current)
@@ -607,6 +608,14 @@ oled.close()
 ```
 
 ---
+
+### 3D Printed Enclosure
+Reworking files provided in 3300A, the introductory course for 3300B, the files were rescaled by 1.60 times to ensure proper fit for our device. While GitHub does not support the necessary file type for including the printed files, a screenshot of the back case is shown below.<img width="759" height="540" alt="Screenshot 2026-05-06 at 12 30 32 PM" src="https://github.com/user-attachments/assets/d3386f4a-341f-4abb-9649-313c5f849cb8" />
+
+
+
+
+
 
 ## 4. Calibration: Iteration History & Challenges
 

@@ -28,7 +28,7 @@ The device demonstrates an end-to-end engineering chain: electrochemical sensing
   - [Glucose Oxidase Reaction Chemistry](#glucose-oxidase-reaction-chemistry)
   - [Chronoamperometry and the Cottrell Equation](#chronoamperometry-and-the-cottrell-equation)
   - [Cyclic Voltammetry for Operating Point Selection](#cyclic-voltammetry-for-operating-point-selection)
-  - [Connections to Core ChE Concepts](#connections-to-core-che-concepts)
+  - [Connections to Core CBE Concepts](#connections-to-core-che-concepts)
 - [Device Design](#3-device-design)
   - [System Architecture](#system-architecture)
   - [Component Selection & Rationale](#component-selection--rationale)
@@ -38,6 +38,7 @@ The device demonstrates an end-to-end engineering chain: electrochemical sensing
   - [Schematics & Wiring](#schematics--wiring)
   - [Code](#code)
   - [3D Printed Enclosure](#3D-printed-enclosure)
+  - [Safety Considerations](#Safety-Considerations)
 - [Calibration: Iteration History & Challenges](#4-calibration-iteration-history--challenges)
   - [Iteration 1 — OneTouch Strips, Peak Current](#iteration-1--onetouch-strips-peak-current)
   - [Iteration 2 — Steady-State Current](#iteration-2--steady-state-current)
@@ -612,9 +613,13 @@ oled.close()
 ### 3D Printed Enclosure
 Reworking files provided in 3300A, the introductory course for 3300B, the files were rescaled by 1.60 times to ensure proper fit for our device. While GitHub does not support the necessary file type for including the printed files, a screenshot of the back case is shown below.<img width="759" height="540" alt="Screenshot 2026-05-06 at 12 30 32 PM" src="https://github.com/user-attachments/assets/d3386f4a-341f-4abb-9649-313c5f849cb8" />
 
+### Safety Considerations
 
+SweetSpot is a prototype engineering demonstration and is **not intended for medical use, diagnosis, treatment decisions, or real blood glucose monitoring**. The primary safety concern is the reliability and accuracy of the glucose readings. Validation results showed significant error and trial-to-trial variability, meaning the device should not be used to guide insulin dosing, dietary decisions, emergency response, or any other health-related action.
 
+Hardware safety was addressed by containing the soldered electrical components within a 3D-printed enclosure. This enclosure reduces direct contact with exposed wiring and soldered connections, improves mechanical stability, and makes the device safer and more reliable for classroom demonstration. The enclosure also helps protect the Arduino, OLED wiring, and soldered breadboard assembly from accidental movement or contact during operation.
 
+Additional safety mitigation measures include automatic re-running of measurements when calculated concentrations fall outside the physiologically plausible range of 0–50 mM. However, this quality gate only catches obvious outliers and does not make the device clinically reliable. SweetSpot should therefore be treated strictly as an educational prototype that demonstrates electrochemical sensing, calibration, and embedded display integration, not as a validated medical device.
 
 
 ## 4. Calibration: Iteration History & Challenges
